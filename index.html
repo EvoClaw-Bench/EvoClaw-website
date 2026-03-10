@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EvoClaw Leaderboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-0:#08080d;--bg-1:#0e0e16;--bg-2:#14141f;--bg-3:#1c1c2b;
+  --border:#262640;--text-1:#e2e8f0;--text-2:#94a3b8;--text-3:#64748b;
+  --accent:#6366f1;--accent-light:#818cf8;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg-0);color:var(--text-1);font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;min-height:100vh}
+.container{max-width:1280px;margin:0 auto;padding:2.5rem 1.5rem}
+
+/* ── Header ────────────────────────────────────────────────── */
+.hero{text-align:center;padding:1.5rem 0 2.5rem}
+.hero-title{font-size:2rem;font-weight:800;letter-spacing:-0.02em;margin-bottom:1.25rem}
+.hero-title .brand{
+  background:linear-gradient(135deg,#6366f1 0%,#a78bfa 50%,#c4b5fd 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-title .sep{color:var(--text-3);font-weight:400;margin:0 .15em}
+.hero-title .desc{color:var(--text-2);font-weight:400;font-size:.85em}
+.hero-desc{color:var(--text-3);font-size:.9rem;max-width:720px;margin:0 auto 1.25rem;line-height:1.7}
+.nav-btns{display:flex;gap:.6rem;justify-content:center;flex-wrap:wrap}
+.nav-btn{display:inline-flex;align-items:center;gap:.45rem;
+  padding:.55rem 1.2rem;border-radius:8px;font-size:.875rem;font-weight:500;
+  text-decoration:none;color:var(--text-2);background:var(--bg-2);
+  border:1px solid var(--border);transition:all .2s ease;cursor:pointer}
+.nav-btn:hover{color:var(--text-1);border-color:var(--accent);background:var(--bg-3)}
+.nav-btn.active{color:#fff;background:var(--accent);border-color:var(--accent)}
+.nav-btn svg{width:16px;height:16px;flex-shrink:0}
+
+/* ── Panels ────────────────────────────────────────────────── */
+.panel{background:var(--bg-1);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.75rem}
+.panel-title{font-size:1.15rem;font-weight:600;margin-bottom:1rem;color:var(--text-1)}
+#chart{width:100%;height:500px;border-radius:8px;background:var(--bg-2)}
+
+/* ── Table ─────────────────────────────────────────────────── */
+.table-wrap{overflow-x:auto;border-radius:8px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:.875rem}
+thead{position:sticky;top:0;z-index:2}
+th{background:var(--bg-3);color:var(--text-2);font-weight:600;padding:.7rem .9rem;
+  text-align:left;white-space:nowrap;cursor:pointer;user-select:none;
+  border-bottom:2px solid var(--border);transition:color .15s}
+th:hover{color:var(--text-1)}
+th.sort-asc::after{content:' \2191';color:var(--accent)}
+th.sort-desc::after{content:' \2193';color:var(--accent)}
+th.num-col{text-align:right}
+td{padding:.55rem .9rem;border-bottom:1px solid rgba(38,38,64,.5);white-space:nowrap;transition:background .15s}
+tr:hover td{background:rgba(99,102,241,.04)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* rank */
+.rank-cell{text-align:center;font-weight:700;width:48px;font-size:.95rem}
+.rank-medal{font-size:1.1rem}
+
+/* org logo */
+.org-logo{width:22px;height:22px;margin-right:8px;vertical-align:middle;flex-shrink:0;border-radius:4px}
+.org-badge{display:inline-flex;align-items:center;justify-content:center;
+  width:22px;height:22px;border-radius:5px;font-size:10px;font-weight:700;
+  color:#fff;margin-right:8px;vertical-align:middle;flex-shrink:0}
+.model-cell{display:flex;align-items:center;font-weight:500}
+
+/* agent badge */
+.agent-badge{display:inline-block;padding:2px 10px;border-radius:6px;font-size:.78rem;font-weight:500}
+
+/* score bar */
+.score-cell{position:relative;text-align:right;font-variant-numeric:tabular-nums}
+.score-bar{position:absolute;right:0;top:2px;bottom:2px;border-radius:4px;opacity:.18;z-index:0}
+.score-val{position:relative;z-index:1;font-weight:600}
+.best-val{color:var(--accent-light);font-weight:700}
+
+/* top-3 row accents */
+tr.top-1 td{background:rgba(251,191,36,.04)}
+tr.top-2 td{background:rgba(192,192,210,.025)}
+tr.top-3 td{background:rgba(205,127,50,.025)}
+
+/* ── Footer ────────────────────────────────────────────────── */
+footer{text-align:center;padding:2rem 0 1rem;color:var(--text-3);font-size:.8rem}
+footer a{color:var(--text-2);text-decoration:none}
+footer a:hover{color:var(--accent)}
+
+/* ── Tooltip ──────────────────────────────────────────────── */
+.tip-popup{position:fixed;background:#1c1c2b;color:#e2e8f0;border:1px solid #262640;border-radius:6px;
+  padding:4px 10px;font-size:.75rem;font-weight:400;white-space:nowrap;
+  pointer-events:none;z-index:9999;opacity:0;transition:opacity .12s}
+.tip-popup.show{opacity:1}
+
+/* ── Toggle ───────────────────────────────────────────────── */
+.toggle-label{display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.85rem;color:var(--text-2)}
+.toggle-label input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer}
+.toggle-text{user-select:none}
+
+/* ── Plotly overrides ──────────────────────────────────────── */
+.js-plotly-plot .plotly .modebar{background:transparent !important}
+.js-plotly-plot .plotly .modebar-btn path{fill:var(--text-3) !important}
+.js-plotly-plot .plotly .modebar-btn:hover path{fill:var(--accent) !important}
+
+@media(max-width:768px){
+  .hero-title{font-size:1.4rem}
+  .container{padding:1.5rem 1rem}
+  #chart{height:360px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ═══ Header ═══ -->
+<header class="hero">
+  <h1 class="hero-title">
+    <span class="brand">EvoClaw</span><span class="sep">:</span><span class="desc">Evaluating LLM Agents on Continuous Software Evolution</span>
+  </h1>
+  <p class="hero-desc">EvoClaw evaluates how well frontier LLM agents can continuously evolve real-world software. Agents build customized software as a &ldquo;Claw&rdquo; to interact with environments, fully autonomously handling streaming requirements from end-users across extended sessions. Benchmarked on real-world evolution itineraries from open-source repositories.</p>
+  <nav class="nav-btns">
+    <a class="nav-btn active" href="#leaderboard">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h8v5a4 4 0 01-8 0V2z"/><path d="M4 4H2.5a1 1 0 00-1 1v.5A2.5 2.5 0 004 8"/><path d="M12 4h1.5a1 1 0 011 1v.5A2.5 2.5 0 0112 8"/><path d="M6 11v2h4v-2"/><path d="M5 13h6"/></svg>
+      Leaderboard</a>
+    <a class="nav-btn" href="#" target="_blank">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1H4a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V5L9 1z"/><path d="M9 1v4h4"/><path d="M5 8h6M5 11h4"/></svg>
+      Paper</a>
+    <a class="nav-btn" href="#" target="_blank">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.24 2 5 2s5-.9 5-2V4"/><path d="M3 8c0 1.1 2.24 2 5 2s5-.9 5-2"/></svg>
+      Data</a>
+    <a class="nav-btn" href="#" target="_blank">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 4 1 8 5 12"/><polyline points="11 4 15 8 11 12"/><line x1="9" y1="2" x2="7" y2="14"/></svg>
+      Code</a>
+  </nav>
+</header>
+
+<!-- ═══ Chart ═══ -->
+<section class="panel" id="overview">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+    <h2 class="panel-title" style="margin-bottom:0">Overall Cost / Performance</h2>
+    <label class="toggle-label">
+      <input type="checkbox" id="officialToggle" checked>
+      <span class="toggle-text">Official agent only</span>
+    </label>
+  </div>
+  <div id="chart"></div>
+</section>
+
+<!-- ═══ Leaderboard ═══ -->
+<section class="panel" id="leaderboard">
+  <h2 class="panel-title">Leaderboard</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th data-key="rank" class="sort-asc">#</th>
+          <th data-key="model_display" data-type="str">Model</th>
+          <th data-key="agent_display" data-type="str">Agent</th>
+          <th data-key="score" class="num-col">Score (%)</th>
+          <th data-key="precision" class="num-col">Precision (%)</th>
+          <th data-key="recall" class="num-col">Recall (%)</th>
+          <th data-key="resolve" class="num-col">Resolve (%)</th>
+          <th data-key="cost" class="num-col">Cost ($)</th>
+          <th data-key="out_tok_k" class="num-col has-tip" data-tip="Output Tokens (K)">Out Tok. (K)</th>
+          <th data-key="time_h" class="num-col">Time (h)</th>
+          <th data-key="turns" class="num-col">Turns</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+
+<footer><p>EvoClaw Benchmark &middot; 2026</p></footer>
+</div>
+
+<script>
+const DATA = [{"agent": "openhands", "agent_display": "OpenHands", "model": "claude-opus-4-6", "model_display": "Claude Opus 4.6", "org": "Anthropic", "org_color": "#D97757", "agent_bg": "rgba(167,139,250,0.15)", "agent_fg": "#a78bfa", "color": "#8050AA", "chart_label": "Claude Opus 4.6", "chart_textpos": "middle right", "score": 38.03, "precision": 37.33, "recall": 55.21, "resolve": 8.46, "cost": 75.73, "out_tok_k": 524, "time_h": 6.53, "turns": 1970, "is_official": false, "rank": 1}, {"agent": "claude-code", "agent_display": "Claude Code", "model": "claude-opus-4-6", "model_display": "Claude Opus 4.6", "org": "Anthropic", "org_color": "#D97757", "agent_bg": "rgba(217,119,87,0.15)", "agent_fg": "#D97757", "color": "#B85A38", "chart_label": "Claude Opus 4.6", "chart_textpos": "middle right", "score": 36.29, "precision": 37.84, "recall": 56.32, "resolve": 11.57, "cost": 87.56, "out_tok_k": 578, "time_h": 3.97, "turns": 1891, "is_official": true, "rank": 2}, {"agent": "claude-code", "agent_display": "Claude Code", "model": "claude-sonnet-4-6", "model_display": "Claude Sonnet 4.6", "org": "Anthropic", "org_color": "#D97757", "agent_bg": "rgba(217,119,87,0.15)", "agent_fg": "#D97757", "color": "#D07A5E", "chart_label": "Claude Sonnet 4.6", "chart_textpos": "middle right", "score": 29.58, "precision": 29.62, "recall": 47.63, "resolve": 5.88, "cost": 111.53, "out_tok_k": 852, "time_h": 4.2, "turns": 1538, "is_official": true, "rank": 3}, {"agent": "codex", "agent_display": "Codex CLI", "model": "gpt-5.3-codex", "model_display": "GPT 5.3 Codex", "org": "OpenAI", "org_color": "#10A37F", "agent_bg": "rgba(16,163,127,0.15)", "agent_fg": "#10A37F", "color": "#68AA68", "chart_label": "GPT-5.3-Codex", "chart_textpos": "middle right", "score": 28.88, "precision": 27.81, "recall": 49.7, "resolve": 9.58, "cost": 24.88, "out_tok_k": 392, "time_h": 8.35, "turns": 1109, "is_official": true, "rank": 4}, {"agent": "openhands", "agent_display": "OpenHands", "model": "gpt-5.3-codex", "model_display": "GPT 5.3 Codex", "org": "OpenAI", "org_color": "#10A37F", "agent_bg": "rgba(167,139,250,0.15)", "agent_fg": "#a78bfa", "color": "#9966BB", "chart_label": "GPT-5.3-Codex", "chart_textpos": "middle right", "score": 26.47, "precision": 25.01, "recall": 37.32, "resolve": 12.5, "cost": 30.13, "out_tok_k": 553, "time_h": 18.49, "turns": 1047, "is_official": false, "rank": 5}, {"agent": "claude-code", "agent_display": "Claude Code", "model": "claude-opus-4-5-20251101", "model_display": "Claude Opus 4.5", "org": "Anthropic", "org_color": "#D97757", "agent_bg": "rgba(217,119,87,0.15)", "agent_fg": "#D97757", "color": "#E8A08C", "chart_label": "Claude Opus 4.5", "chart_textpos": "middle right", "score": 25.85, "precision": 28.04, "recall": 40.8, "resolve": 6.28, "cost": 68.55, "out_tok_k": 309, "time_h": 2.12, "turns": 999, "is_official": true, "rank": 6}, {"agent": "gemini-cli", "agent_display": "Gemini CLI", "model": "gemini-3-pro", "model_display": "Gemini 3 Pro", "org": "Google", "org_color": "#4285F4", "agent_bg": "rgba(66,133,244,0.15)", "agent_fg": "#4285F4", "color": "#B8D4EC", "chart_label": "Gemini 3 Pro", "chart_textpos": "middle right", "score": 24.25, "precision": 25.46, "recall": 32.7, "resolve": 13.37, "cost": 108.12, "out_tok_k": 294, "time_h": 3.56, "turns": 676, "is_official": true, "rank": 7}, {"agent": "gemini-cli", "agent_display": "Gemini CLI", "model": "gemini-3-flash", "model_display": "Gemini 3 Flash", "org": "Google", "org_color": "#4285F4", "agent_bg": "rgba(66,133,244,0.15)", "agent_fg": "#4285F4", "color": "#5590C0", "chart_label": "Gemini 3 Flash", "chart_textpos": "middle right", "score": 24.22, "precision": 24.31, "recall": 42.12, "resolve": 8.37, "cost": 11.75, "out_tok_k": 255, "time_h": 4.4, "turns": 1512, "is_official": true, "rank": 8}, {"agent": "gemini-cli", "agent_display": "Gemini CLI", "model": "gemini-3.1-pro", "model_display": "Gemini 3.1 Pro", "org": "Google", "org_color": "#4285F4", "agent_bg": "rgba(66,133,244,0.15)", "agent_fg": "#4285F4", "color": "#7AAED8", "chart_label": "Gemini 3.1 Pro", "chart_textpos": "middle right", "score": 23.32, "precision": 21.59, "recall": 37.22, "resolve": 10.95, "cost": 59.31, "out_tok_k": 207, "time_h": 4.65, "turns": 1208, "is_official": true, "rank": 9}, {"agent": "codex", "agent_display": "Codex CLI", "model": "gpt-5.2", "model_display": "GPT 5.2", "org": "OpenAI", "org_color": "#10A37F", "agent_bg": "rgba(16,163,127,0.15)", "agent_fg": "#10A37F", "color": "#90C890", "chart_label": "GPT-5.2", "chart_textpos": "middle right", "score": 23.3, "precision": 20.89, "recall": 45.76, "resolve": 8.18, "cost": 56.59, "out_tok_k": 814, "time_h": 5.44, "turns": 1717, "is_official": true, "rank": 10}, {"agent": "openhands", "agent_display": "OpenHands", "model": "gemini-3-flash", "model_display": "Gemini 3 Flash", "org": "Google", "org_color": "#4285F4", "agent_bg": "rgba(167,139,250,0.15)", "agent_fg": "#a78bfa", "color": "#B080CC", "chart_label": "Gemini 3 Flash", "chart_textpos": "middle right", "score": 22.32, "precision": 25.2, "recall": 37.13, "resolve": 6.59, "cost": 16.9, "out_tok_k": 1516, "time_h": 7.09, "turns": 2632, "is_official": false, "rank": 11}, {"agent": "openhands", "agent_display": "OpenHands", "model": "kimi-k2.5", "model_display": "Kimi K2.5", "org": "Moonshot AI", "org_color": "#7C3AED", "agent_bg": "rgba(167,139,250,0.15)", "agent_fg": "#a78bfa", "color": "#C89DDC", "chart_label": "Kimi K2.5", "chart_textpos": "middle right", "score": 20.2, "precision": 26.29, "recall": 31.37, "resolve": 8.49, "cost": 4.32, "out_tok_k": 279, "time_h": 4.84, "turns": 800, "is_official": true, "rank": 12}, {"agent": "openhands", "agent_display": "OpenHands", "model": "minimax-m2.5", "model_display": "MiniMax M2.5", "org": "MiniMax", "org_color": "#F97316", "agent_bg": "rgba(167,139,250,0.15)", "agent_fg": "#a78bfa", "color": "#E2C4F0", "chart_label": "MiniMax M2.5", "chart_textpos": "middle right", "score": 17.6, "precision": 22.48, "recall": 34.6, "resolve": 1.3, "cost": 3.57, "out_tok_k": 598, "time_h": 10.79, "turns": 1846, "is_official": true, "rank": 13}, {"agent": "claude-code", "agent_display": "Claude Code", "model": "claude-sonnet-4-5-20250929", "model_display": "Claude Sonnet 4.5", "org": "Anthropic", "org_color": "#D97757", "agent_bg": "rgba(217,119,87,0.15)", "agent_fg": "#D97757", "color": "#F5D5C4", "chart_label": "Claude Sonnet 4.5", "chart_textpos": "middle right", "score": 15.16, "precision": 18.88, "recall": 28.5, "resolve": 5.49, "cost": 26.6, "out_tok_k": 243, "time_h": 1.65, "turns": 770, "is_official": true, "rank": 14}, {"agent": "codex", "agent_display": "Codex CLI", "model": "gpt-5.2-codex", "model_display": "GPT 5.2 Codex", "org": "OpenAI", "org_color": "#10A37F", "agent_bg": "rgba(16,163,127,0.15)", "agent_fg": "#10A37F", "color": "#C8E6C8", "chart_label": "GPT-5.2-Codex", "chart_textpos": "middle right", "score": 13.46, "precision": 12.65, "recall": 26.65, "resolve": 4.78, "cost": 37.74, "out_tok_k": 701, "time_h": 3.63, "turns": 1259, "is_official": true, "rank": 15}];
+const LOGOS = {"anthropic": "data:image/svg+xml;base64,PHN2ZyBmaWxsPSJub25lIiBoZWlnaHQ9IjI1MDAiIHZpZXdCb3g9IjAgLS4wMSAzOS41IDM5LjUzIiB3aWR0aD0iMjUwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJtNy43NSAyNi4yNyA3Ljc3LTQuMzYuMTMtLjM4LS4xMy0uMjFoLS4zOGwtMS4zLS4wOC00LjQ0LS4xMi0zLjg1LS4xNi0zLjczLS4yLS45NC0uMi0uODgtMS4xNi4wOS0uNTguNzktLjUzIDEuMTMuMSAyLjUuMTcgMy43NS4yNiAyLjcyLjE2IDQuMDMuNDJoLjY0bC4wOS0uMjYtLjIyLS4xNi0uMTctLjE2LTMuODgtMi42My00LjItMi43OC0yLjItMS42LTEuMTktLjgxLS42LS43Ni0uMjYtMS42NiAxLjA4LTEuMTkgMS40NS4xLjM3LjEgMS40NyAxLjEzIDMuMTQgMi40MyA0LjEgMy4wMi42LjUuMjQtLjE3LjAzLS4xMi0uMjctLjQ1LTIuMjMtNC4wMy0yLjM4LTQuMS0xLjA2LTEuNy0uMjgtMS4wMmMtLjEtLjQyLS4xNy0uNzctLjE3LTEuMmwxLjIzLTEuNjcuNjgtLjIyIDEuNjQuMjIuNjkuNiAxLjAyIDIuMzMgMS42NSAzLjY3IDIuNTYgNC45OS43NSAxLjQ4LjQgMS4zNy4xNS40MmguMjZ2LS4yNGwuMjEtMi44MS4zOS0zLjQ1LjM4LTQuNDQuMTMtMS4yNS42Mi0xLjUgMS4yMy0uODEuOTYuNDYuNzkgMS4xMy0uMTEuNzMtLjQ3IDMuMDUtLjkyIDQuNzgtLjYgMy4yaC4zNWwuNC0uNCAxLjYyLTIuMTUgMi43Mi0zLjQgMS4yLTEuMzUgMS40LTEuNDkuOS0uNzFoMS43bDEuMjUgMS44Ni0uNTYgMS45Mi0xLjc1IDIuMjItMS40NSAxLjg4LTIuMDggMi44LTEuMyAyLjI0LjEyLjE4LjMxLS4wMyA0LjctMSAyLjU0LS40NiAzLjAzLS41MiAxLjM3LjY0LjE1LjY1LS41NCAxLjMzLTMuMjQuOC0zLjguNzYtNS42NiAxLjM0LS4wNy4wNS4wOC4xIDIuNTUuMjQgMS4wOS4wNmgyLjY3bDQuOTcuMzcgMS4zLjg2Ljc4IDEuMDUtLjEzLjgtMiAxLjAyLTIuNy0uNjQtNi4zLTEuNS0yLjE2LS41NGgtLjN2LjE4bDEuOCAxLjc2IDMuMyAyLjk4IDQuMTMgMy44NC4yMS45NS0uNTMuNzUtLjU2LS4wOC0zLjYzLTIuNzMtMS40LTEuMjMtMy4xNy0yLjY3aC0uMjF2LjI4bC43MyAxLjA3IDMuODYgNS44LjIgMS43OC0uMjguNTgtMSAuMzUtMS4xLS4yLTIuMjYtMy4xNy0yLjMzLTMuNTctMS44OC0zLjItLjIzLjEzLTEuMTEgMTEuOTUtLjUyLjYxLTEuMi40Ni0xLS43Ni0uNTMtMS4yMy41My0yLjQzLjY0LTMuMTcuNTItMi41Mi40Ny0zLjEzLjI4LTEuMDQtLjAyLS4wNy0uMjMuMDMtMi4zNiAzLjI0LTMuNTkgNC44NS0yLjg0IDMuMDQtLjY4LjI3LTEuMTgtLjYxLjExLTEuMDkuNjYtLjk3IDMuOTMtNSAyLjM3LTMuMSAxLjUzLTEuNzktLjAxLS4yNmgtLjA5bC0xMC40NCA2Ljc4LTEuODYuMjQtLjgtLjc1LjEtMS4yMy4zOC0uNCAzLjE0LTIuMTZ6IiBmaWxsPSIjZDk3NzU3Ii8+PC9zdmc+", "openai": "data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjQgMjQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgZmlsbD0iIzQxMjk5MSI+CjxwYXRoIGQ9Ik0yMi4yODE5IDkuODIxMWE1Ljk4NDcgNS45ODQ3IDAgMCAwLS41MTU3LTQuOTEwOCA2LjA0NjIgNi4wNDYyIDAgMCAwLTYuNTA5OC0yLjlBNi4wNjUxIDYuMDY1MSAwIDAgMCA0Ljk4MDcgNC4xODE4YTUuOTg0NyA1Ljk4NDcgMCAwIDAtMy45OTc3IDIuOSA2LjA0NjIgNi4wNDYyIDAgMCAwIC43NDI3IDcuMDk2NiA1Ljk4IDUuOTggMCAwIDAgLjUxMSA0LjkxMDcgNi4wNTEgNi4wNTEgMCAwIDAgNi41MTQ2IDIuOTAwMUE1Ljk4NDcgNS45ODQ3IDAgMCAwIDEzLjI1OTkgMjRhNi4wNTU3IDYuMDU1NyAwIDAgMCA1Ljc3MTgtNC4yMDU4IDUuOTg5NCA1Ljk4OTQgMCAwIDAgMy45OTc3LTIuOTAwMSA2LjA1NTcgNi4wNTU3IDAgMCAwLS43NDc1LTcuMDcyOXptLTkuMDIyIDEyLjYwODFhNC40NzU1IDQuNDc1NSAwIDAgMS0yLjg3NjQtMS4wNDA4bC4xNDE5LS4wODA0IDQuNzc4My0yLjc1ODJhLjc5NDguNzk0OCAwIDAgMCAuMzkyNy0uNjgxM3YtNi43MzY5bDIuMDIgMS4xNjg2YS4wNzEuMDcxIDAgMCAxIC4wMzguMDUydjUuNTgyNmE0LjUwNCA0LjUwNCAwIDAgMS00LjQ5NDUgNC40OTQ0em0tOS42NjA3LTQuMTI1NGE0LjQ3MDggNC40NzA4IDAgMCAxLS41MzQ2LTMuMDEzN2wuMTQyLjA4NTIgNC43ODMgMi43NTgyYS43NzEyLjc3MTIgMCAwIDAgLjc4MDYgMGw1Ljg0MjgtMy4zNjg1djIuMzMyNGEuMDgwNC4wODA0IDAgMCAxLS4wMzMyLjA2MTVMOS43NCAxOS45NTAyYTQuNDk5MiA0LjQ5OTIgMCAwIDEtNi4xNDA4LTEuNjQ2NHpNMi4zNDA4IDcuODk1NmE0LjQ4NSA0LjQ4NSAwIDAgMSAyLjM2NTUtMS45NzI4VjExLjZhLjc2NjQuNzY2NCAwIDAgMCAuMzg3OS42NzY1bDUuODE0NCAzLjM1NDMtMi4wMjAxIDEuMTY4NWEuMDc1Ny4wNzU3IDAgMCAxLS4wNzEgMGwtNC44MzAzLTIuNzg2NUE0LjUwNCA0LjUwNCAwIDAgMSAyLjM0MDggNy44OTU2em0xNi4wOTkzIDMuODU1OEwxMi42IDguMzgyOWwyLjAyLTEuMTYzOGEuMDc1Ny4wNzU3IDAgMCAxIC4wNzEgMGw0LjgzMDMgMi43OTEzYTQuNDk0NCA0LjQ5NDQgMCAwIDEtLjY3NjUgOC4xMDQydi01LjY3NzJhLjc5Ljc5IDAgMCAwLS40MDctLjY2N3ptMi4wMTA3LTMuMDIzMWwtLjE0Mi0uMDg1Mi00Ljc3MzUtMi43ODE4YS43NzU5Ljc3NTkgMCAwIDAtLjc4NTQgMEw5LjQwOSA5LjIyOTdWNi44OTc0YS4wNjYyLjA2NjIgMCAwIDEgLjAyODQtLjA2MTVsNC44MzAzLTIuNzg2NmE0LjQ5OTIgNC40OTkyIDAgMCAxIDYuMTQwOCA0LjY2ek04LjMwNjUgMTIuODYzbC0yLjAyLTEuMTYzOGEuMDgwNC4wODA0IDAgMCAxLS4wMzgtLjA1NjdWNi4wNzQyYTQuNDk5MiA0LjQ5OTIgMCAwIDEgNy4zNzU3LTMuNDUzN2wtLjE0Mi4wODA1TDguNzA0IDUuNDU5YS43OTQ4Ljc5NDggMCAwIDAtLjM5MjcuNjgxM3ptMS4wOTc2LTIuMzY1NGwyLjYwMi0xLjQ5OTggMi42MDY5IDEuNDk5OHYyLjk5OTRsLTIuNTk3NCAxLjQ5OTctMi42MDY3LTEuNDk5N1oiLz4KPC9zdmc+Cg==", "google": "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjNDI4NUY0IiByb2xlPSJpbWciIHZpZXdCb3g9IjAgMCAyNCAyNCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+R29vZ2xlPC90aXRsZT48cGF0aCBkPSJNMTIuNDggMTAuOTJ2My4yOGg3Ljg0Yy0uMjQgMS44NC0uODUzIDMuMTg3LTEuNzg3IDQuMTMzLTEuMTQ3IDEuMTQ3LTIuOTMzIDIuNC02LjA1MyAyLjQtNC44MjcgMC04LjYtMy44OTMtOC42LTguNzJzMy43NzMtOC43MiA4LjYtOC43MmMyLjYgMCA0LjUwNyAxLjAyNyA1LjkwNyAyLjM0N2wyLjMwNy0yLjMwN0MxOC43NDcgMS40NCAxNi4xMzMgMCAxMi40OCAwIDUuODY3IDAgLjMwNyA1LjM4Ny4zMDcgMTJzNS41NiAxMiAxMi4xNzMgMTJjMy41NzMgMCA2LjI2Ny0xLjE3MyA4LjM3My0zLjM2IDIuMTYtMi4xNiAyLjg0LTUuMjEzIDIuODQtNy42NjcgMC0uNzYtLjA1My0xLjQ2Ny0uMTczLTIuMDUzSDEyLjQ4eiIvPjwvc3ZnPg==", "moonshot": "data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmZmZmIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGhlaWdodD0iMWVtIiBzdHlsZT0iZmxleDpub25lO2xpbmUtaGVpZ2h0OjEiIHZpZXdCb3g9IjAgMCAyNCAyNCIgd2lkdGg9IjFlbSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48dGl0bGU+TW9vbnNob3RBSTwvdGl0bGU+PHBhdGggZD0iTTEuMDUyIDE2LjkxNmw5LjUzOSAyLjU1MmEyMS4wMDcgMjEuMDA3IDAgMDAuMDYgMi4wMzNsNS45NTYgMS41OTNhMTEuOTk3IDExLjk5NyAwIDAxLTUuNTg2Ljg2NWwtLjE4LS4wMTYtLjA0NC0uMDA0LS4wODQtLjAwOS0uMDk0LS4wMWExMS42MDUgMTEuNjA1IDAgMDEtLjE1Ny0uMDJsLS4xMDctLjAxNC0uMTEtLjAxNmExMS45NjIgMTEuOTYyIDAgMDEtLjMyLS4wNTFsLS4wNDItLjAwOC0uMDc1LS4wMTMtLjEwNy0uMDItLjA3LS4wMTUtLjA5My0uMDE5LS4wNzUtLjAxNi0uMDk1LS4wMi0uMDk3LS4wMjMtLjA5NC0uMDIyLS4wNjgtLjAxNy0uMDg4LS4wMjItLjA5LS4wMjQtLjA5NS0uMDI1LS4wODItLjAyMy0uMTA5LS4wMy0uMDYyLS4wMi0uMDg0LS4wMjUtLjA5My0uMDI4LS4xMDUtLjAzNC0uMDU4LS4wMTktLjA4LS4wMjYtLjA5LS4wMzEtLjA2Ni0uMDI0YTYuMjkzIDYuMjkzIDAgMDEtLjA0NC0uMDE1bC0uMDY4LS4wMjUtLjEwMS0uMDM3LS4wNTctLjAyMi0uMDgtLjAzLS4wODctLjAzNS0uMDg4LS4wMzUtLjA3OS0uMDMyLS4wOTUtLjA0LS4wNjMtLjAyOC0uMDYzLS4wMjdhNS42NTUgNS42NTUgMCAwMS0uMDQxLS4wMThsLS4wNjYtLjAzLS4xMDMtLjA0Ny0uMDUyLS4wMjQtLjA5Ni0uMDQ2LS4wNjItLjAzLS4wODQtLjA0LS4wODYtLjA0NC0uMDkzLS4wNDctLjA1Mi0uMDI3LS4xMDMtLjA1NS0uMDU3LS4wMy0uMDU4LS4wMzJhNi40OSA2LjQ5IDAgMDEtLjA0Ni0uMDI2bC0uMDk0LS4wNTMtLjA2LS4wMzQtLjA1MS0uMDMtLjA3Mi0uMDQxLS4wODItLjA1LS4wOTMtLjA1Ni0uMDUyLS4wMzItLjA4NC0uMDUzLS4wNjEtLjAzOS0uMDc5LS4wNS0uMDctLjA0Ny0uMDUzLS4wMzVhNy43ODUgNy43ODUgMCAwMS0uMDU0LS4wMzZsLS4wNDQtLjAzLS4wNDQtLjAzYTYuMDY2IDYuMDY2IDAgMDEtLjA0LS4wMjhsLS4wNTctLjA0LS4wNzYtLjA1NC0uMDY5LS4wNS0uMDc0LS4wNTQtLjA1Ni0uMDQyLS4wNzYtLjA1Ny0uMDc2LS4wNTktLjA4Ni0uMDY3LS4wNDUtLjAzNS0uMDY0LS4wNTItLjA3NC0uMDYtLjA4OS0uMDczLS4wNDYtLjAzOS0uMDQ2LS4wMzlhNy41MTYgNy41MTYgMCAwMS0uMDQzLS4wMzdsLS4wNDUtLjA0LS4wNjEtLjA1My0uMDctLjA2Mi0uMDY4LS4wNi0uMDYyLS4wNTgtLjA2Ny0uMDYyLS4wNTMtLjA1LS4wODgtLjA4NGExMy4yOCAxMy4yOCAwIDAxLS4wOTktLjA5N2wtLjAyOS0uMDI4LS4wNDEtLjA0Mi0uMDY5LS4wNy0uMDUtLjA1MS0uMDUtLjA1M2E2LjQ1NyA2LjQ1NyAwIDAxLS4xNjgtLjE3OWwtLjA4LS4wODgtLjA2Mi0uMDctLjA3MS0uMDgtLjA0Mi0uMDQ5LS4wNTMtLjA2Mi0uMDU4LS4wNjgtLjA0Ni0uMDU2YTcuMTc1IDcuMTc1IDAgMDEtLjAyNy0uMDMzbC0uMDQ1LS4wNTUtLjA2Ni0uMDgyLS4wNDEtLjA1Mi0uMDUtLjA2NC0uMDItLjAyNWExMS45OSAxMS45OSAwIDAxLTEuNDQtMi40MDJ6bS0xLjAyLTUuNzk0bDExLjM1MyAzLjAzN2EyMC40NjggMjAuNDY4IDAgMDAtLjQ2OSAyLjAxMWwxMC44MTcgMi44OTRhMTIuMDc2IDEyLjA3NiAwIDAxLTEuODQ1IDIuMDA1TC42NTcgMTUuOTIzbC0uMDE2LS4wNDYtLjAzNS0uMTA0YTExLjk2NSAxMS45NjUgMCAwMS0uMDUtLjE1M2wtLjAwNy0uMDIzYTExLjg5NiAxMS44OTYgMCAwMS0uMjA3LS43NDFsLS4wMy0uMTI2LS4wMTgtLjA4LS4wMjEtLjA5Ny0uMDE4LS4wODEtLjAxOC0uMDktLjAxNy0uMDg0LS4wMTgtLjA5NGMtLjAyNi0uMTQxLS4wNS0uMjgzLS4wNzEtLjQyNmwtLjAxNy0uMTE4LS4wMTEtLjA4My0uMDEzLS4xMDJhMTIuMDEgMTIuMDEgMCAwMS0uMDE5LS4xNjFsLS4wMDUtLjA0N2ExMi4xMiAxMi4xMiAwIDAxLS4wMzQtMi4xNDV6bTEuNTkzLTUuMTVsMTEuOTQ4IDMuMTk2Yy0uMzY4LjYwNS0uNzA1IDEuMjMxLTEuMDEgMS44NzVsMTEuMjk1IDMuMDIyYy0uMTQyLjgyLS4zNjggMS42MTItLjY2OCAyLjM2NWwtMTEuNTUtMy4wOUwuMTI0IDEwLjI2bC4wMTUtLjEuMDA4LS4wNDkuMDEtLjA2Ny4wMTUtLjA4Ny4wMTgtLjA5OGMuMDI2LS4xNDguMDU2LS4yOTUuMDg4LS40NDJsLjAyOC0uMTI0LjAyLS4wODUuMDI0LS4wOTdjLjAyMi0uMDkuMDQ1LS4xOC4wNy0uMjY4bC4wMjgtLjEwMi4wMjMtLjA4My4wMy0uMS4wMjUtLjA4Mi4wMy0uMDk2LjAyNi0uMDgyLjAzMS0uMDk1YTExLjg5NiAxMS44OTYgMCAwMTEuMDEtMi4yMzJ6bTQuNDQyLTQuNEwxNy4zNTIgNC41OWEyMC43NyAyMC43NyAwIDAwLTEuNjg4IDEuNzIxbDcuODIzIDIuMDkzYy4yNjcuODUyLjQ0MiAxLjc0NC41MTMgMi42NjVMMi4xMDYgNS4yMTNsLjA0NS0uMDY1LjAyNy0uMDQuMDQtLjA1NS4wNDYtLjA2NS4wNTUtLjA3Ni4wNTQtLjA3Mi4wNjQtLjA4Ni4wNS0uMDY1LjA1Ny0uMDczLjA1NS0uMDcuMDYtLjA3NC4wNTUtLjA2OS4wNjUtLjA3Ny4wNTQtLjA2Ni4wNjYtLjA3Ny4wNTMtLjA2LjA3Mi0uMDgyLjA1My0uMDYuMDY3LS4wNzQuMDU0LS4wNTguMDczLS4wNzguMDU4LS4wNi4wNjMtLjA2Ny4xNjgtLjE3LjEtLjA5OC4wNTktLjA1Ni4wNzYtLjA3MWExMi4wODQgMTIuMDg0IDAgMDEyLjI3Mi0xLjY3N3pNMTIuMDE3IDBoLjA5N2wuMDgyLjAwMS4wNjkuMDAxLjA1NC4wMDIuMDY4LjAwMi4wNDYuMDAxLjA3Ni4wMDMuMDQ3LjAwMi4wNi4wMDMuMDU0LjAwMi4wODcuMDA1LjEwNS4wMDcuMTQ0LjAxMS4wODguMDA3LjA0NC4wMDQuMDc3LjAwOC4wODIuMDA4LjA0Ny4wMDUuMTAyLjAxMi4wNS4wMDYuMTA4LjAxNC4wODEuMDEuMDQyLjAwNi4wNjUuMDEuMjA3LjAzMi4wNy4wMTIuMDY1LjAxMS4xNC4wMjYuMDkyLjAxOC4xMS4wMjIuMDQ2LjAxLjA3NS4wMTYuMDQxLjAxTDE0LjcuM2wuMDQyLjAxLjA2NS4wMTUuMDQ5LjAxMi4wNzEuMDE3LjA5Ni4wMjQuMTEyLjAzLjExMy4wMy4xMTMuMDMyLjA1LjAxNS4wNy4wMi4wNzguMDI0LjA3My4wMjMuMDUuMDE2LjA1LjAxNi4wNzYuMDI1LjA5OS4wMzMuMTAyLjAzNi4wNDguMDE3LjA2NC4wMjMuMDkzLjAzNC4xMS4wNDEuMTE2LjA0NS4xLjA0LjA0Ny4wMi4wNi4wMjQuMDQxLjAxOC4wNjMuMDI2LjA0LjAxOC4wNTcuMDI1LjExLjA0OC4xLjA0Ni4wNzQuMDM1LjA3NS4wMzYuMDYuMDI4LjA5Mi4wNDYuMDkxLjA0NS4xMDIuMDUyLjA1My4wMjguMDQ5LjAyNi4wNDYuMDI0LjA2LjAzMy4wNDEuMDIyLjA1Mi4wMjkuMDg4LjA1LjEwNi4wNi4wODcuMDUxLjA1Ny4wMzQuMDUzLjAzMi4wOTYuMDU5LjA4OC4wNTUuMDk4LjA2Mi4wMzYuMDI0LjA2NC4wNDEuMDg0LjA1Ni4wNC4wMjcuMDYyLjA0Mi4wNjIuMDQzLjAyMy4wMTdjLjA1NC4wMzcuMTA4LjA3NS4xNjEuMTE0bC4wODMuMDYuMDY1LjA0OC4wNTYuMDQzLjA4Ni4wNjUuMDgyLjA2NC4wNC4wMy4wNS4wNDEuMDg2LjA2OS4wNzkuMDY1LjA4NS4wNzFjLjcxMi42IDEuMzUzIDEuMjgzIDEuOTA5IDIuMDMxTDcuMjIyLjk5NGwuMDYyLS4wMjcuMDY1LS4wMjguMDgxLS4wMzQuMDg2LS4wMzVjLjExMy0uMDQ1LjIyNy0uMDkuMzQxLS4xMzFsLjA5Ni0uMDM1LjA5My0uMDMzLjA4NC0uMDMuMDk2LS4wMzFjLjA4Ny0uMDMuMTc2LS4wNTguMjY0LS4wODVsLjA5MS0uMDI3LjA4Ni0uMDI1LjEwMi0uMDMuMDg1LS4wMjMuMS0uMDI2TDkuMDQuMzdsLjA5LS4wMjMuMDkxLS4wMjIuMDk1LS4wMjIuMDktLjAyLjA5OC0uMDIxLjA5MS0uMDIuMDk1LS4wMTguMDkyLS4wMTguMS0uMDE4LjA5MS0uMDE2LjA5OC0uMDE3LjA5Mi0uMDE0LjA5Ny0uMDE1LjA5Mi0uMDEzLjEwMi0uMDEzLjA5MS0uMDEyLjEwNS0uMDEyLjA5LS4wMS4xMDUtLjAxYy4wOTMtLjAxLjE4Ni0uMDE4LjI4LS4wMjRsLjEwNi0uMDA4LjA5LS4wMDUuMTEtLjAwNi4wOTMtLjAwNC4xLS4wMDQuMDk3LS4wMDIuMDk5LS4wMDIuMTk3LS4wMDJ6Ij48L3BhdGg+PC9zdmc+", "minimax": "data:image/svg+xml;base64,PHN2ZyBoZWlnaHQ9IjFlbSIgc3R5bGU9ImZsZXg6bm9uZTtsaW5lLWhlaWdodDoxIiB2aWV3Qm94PSIwIDAgMjQgMjQiIHdpZHRoPSIxZW0iIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHRpdGxlPk1pbmltYXg8L3RpdGxlPjxkZWZzPjxsaW5lYXJHcmFkaWVudCBpZD0ibG9iZS1pY29ucy1taW5pbWF4LWZpbGwiIHgxPSIwJSIgeDI9IjEwMC4xODIlIiB5MT0iNTAuMDU3JSIgeTI9IjUwLjA1NyUiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiNFMjE2N0UiPjwvc3RvcD48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNGRTYwM0MiPjwvc3RvcD48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cGF0aCBkPSJNMTYuMjc4IDJjMS4xNTYgMCAyLjA5My45MjcgMi4wOTMgMi4wN3YxMi41MDFhLjc0Ljc0IDAgMDAuNzQ0LjcwOS43NC43NCAwIDAwLjc0My0uNzA5VjkuMDk5YTIuMDYgMi4wNiAwIDAxMi4wNzEtMi4wNDlBMi4wNiAyLjA2IDAgMDEyNCA5LjF2Ni41NjFhLjY0OS42NDkgMCAwMS0uNjUyLjY0NS42NDkuNjQ5IDAgMDEtLjY1My0uNjQ1VjkuMWEuNzYyLjc2MiAwIDAwLS43NjYtLjc1OC43NjIuNzYyIDAgMDAtLjc2Ni43NTh2Ny40NzJhMi4wMzcgMi4wMzcgMCAwMS0yLjA0OCAyLjAyNiAyLjAzNyAyLjAzNyAwIDAxLTIuMDQ4LTIuMDI2di0xMi41YS43ODUuNzg1IDAgMDAtLjc4OC0uNzUzLjc4NS43ODUgMCAwMC0uNzg5Ljc1MmwtLjAwMSAxNS45MDRBMi4wMzcgMi4wMzcgMCAwMTEzLjQ0MSAyMmEyLjAzNyAyLjAzNyAwIDAxLTIuMDQ4LTIuMDI2VjE4LjA0YzAtLjM1Ni4yOTItLjY0NS42NTItLjY0NS4zNiAwIC42NTIuMjg5LjY1Mi42NDV2MS45MzRjMCAuMjYzLjE0Mi41MDYuMzcyLjYzOC4yMy4xMzEuNTE0LjEzMS43NDQgMGEuNzM0LjczNCAwIDAwLjM3Mi0uNjM4VjQuMDdjMC0xLjE0My45MzctMi4wNyAyLjA5My0yLjA3em0tNS42NzQgMGMxLjE1NiAwIDIuMDkzLjkyNyAyLjA5MyAyLjA3djExLjUyM2EuNjQ4LjY0OCAwIDAxLS42NTIuNjQ1LjY0OC42NDggMCAwMS0uNjUyLS42NDVWNC4wN2EuNzg1Ljc4NSAwIDAwLS43ODktLjc4Ljc4NS43ODUgMCAwMC0uNzg5Ljc4djE0LjAxM2EyLjA2IDIuMDYgMCAwMS0yLjA3IDIuMDQ4IDIuMDYgMi4wNiAwIDAxLTIuMDcxLTIuMDQ4VjkuMWEuNzYyLjc2MiAwIDAwLS43NjYtLjc1OC43NjIuNzYyIDAgMDAtLjc2Ni43NTh2My44YTIuMDYgMi4wNiAwIDAxLTIuMDcxIDIuMDQ5QTIuMDYgMi4wNiAwIDAxMCAxMi45di0xLjM3OGMwLS4zNTcuMjkyLS42NDYuNjUyLS42NDYuMzYgMCAuNjUzLjI5LjY1My42NDZWMTIuOWMwIC40MTguMzQzLjc1Ny43NjYuNzU3cy43NjYtLjMzOS43NjYtLjc1N1Y5LjA5OWEyLjA2IDIuMDYgMCAwMTIuMDctMi4wNDggMi4wNiAyLjA2IDAgMDEyLjA3MSAyLjA0OHY4Ljk4NGMwIC40MTkuMzQzLjc1OC43NjcuNzU4LjQyMyAwIC43NjYtLjMzOS43NjYtLjc1OFY0LjA3YzAtMS4xNDMuOTM3LTIuMDcgMi4wOTMtMi4wN3oiIGZpbGw9InVybCgjbG9iZS1pY29ucy1taW5pbWF4LWZpbGwpIiBmaWxsLXJ1bGU9Im5vbnplcm8iPjwvcGF0aD48L3N2Zz4="};
+
+// org key mapping
+const ORG_KEY = { 'Anthropic':'anthropic','OpenAI':'openai','Google':'google','Moonshot AI':'moonshot','MiniMax':'minimax' };
+
+// ═══════════════════════════════════════════════════════════
+// Shared state
+// ═══════════════════════════════════════════════════════════
+const orgs = [
+  { key: 'Anthropic',   color: '#D97757' },
+  { key: 'OpenAI',      color: '#10A37F' },
+  { key: 'Google',      color: '#4285F4' },
+  { key: 'Moonshot AI', color: '#7C3AED' },
+  { key: 'MiniMax',     color: '#F97316' },
+];
+
+function getFiltered() {
+  const official = document.getElementById('officialToggle').checked;
+  return official ? DATA.filter(d => d.is_official) : DATA;
+}
+
+// ═══════════════════════════════════════════════════════════
+// Chart
+// ═══════════════════════════════════════════════════════════
+function renderChart() {
+  const fdata = getFiltered();
+
+  const allX = fdata.map(d => d.cost), allY = fdata.map(d => d.score);
+  const xMin = Math.min(...allX), xMax = Math.max(...allX);
+  const yMin = Math.min(...allY), yMax = Math.max(...allY);
+  const xPad = (xMax - xMin) * 0.15, xPadR = (xMax - xMin) * 0.25, yPad = (yMax - yMin) * 0.15;
+  const iconX = (xMax - xMin + 2*xPad) * 0.025;
+  const iconY = (yMax - yMin + 2*yPad) * 0.055;
+
+  const traces = orgs.map(org => {
+    const pts = fdata.filter(d => d.org === org.key);
+    if (!pts.length) return null;
+    return {
+      x: pts.map(p => p.cost),
+      y: pts.map(p => p.score),
+      text: pts.map(p => p.chart_label),
+      customdata: pts.map(p => [
+        p.model_display, p.agent_display, p.precision, p.recall,
+        p.resolve, p.out_tok_k, p.time_h, p.turns
+      ]),
+      mode: 'markers+text',
+      type: 'scatter',
+      name: org.key,
+      marker: { size: 28, color: 'rgba(0,0,0,0)' },
+      textposition: pts.map(p => p.chart_textpos || 'middle right'),
+      textfont: { size: 13, color: '#c8d0dc', family: 'Inter, sans-serif' },
+      hovertemplate:
+        '<b>%{customdata[0]}</b> (<b>%{customdata[1]}</b>)<br>' +
+        'Score: %{y:.1f}%<br>' +
+        'Cost: $%{x:.2f}<br>' +
+        'Precision: %{customdata[2]:.1f}%<br>' +
+        'Recall: %{customdata[3]:.1f}%<br>' +
+        'Resolve: %{customdata[4]:.1f}%<br>' +
+        'Output Tok: %{customdata[5]}K<br>' +
+        'Time: %{customdata[6]:.1f}h &middot; Turns: %{customdata[7]}<extra></extra>',
+      showlegend: false,
+    };
+  }).filter(Boolean);
+
+  const images = fdata.map(d => {
+    const lk = ORG_KEY[d.org];
+    if (!lk || !LOGOS[lk]) return null;
+    return {
+      source: LOGOS[lk],
+      xref: 'x', yref: 'y',
+      x: d.cost, y: d.score,
+      sizex: iconX, sizey: iconY,
+      xanchor: 'center', yanchor: 'middle',
+      layer: 'above',
+    };
+  }).filter(Boolean);
+
+  const layout = {
+    paper_bgcolor: '#0e0e16',
+    plot_bgcolor: '#14141f',
+    font: { color: '#e2e8f0', family: 'Inter, system-ui, sans-serif', size: 12 },
+    xaxis: {
+      title: { text: 'Average Cost Per Problem (USD)', font: { size: 13 } },
+      gridcolor: '#1c1c2b', zerolinecolor: '#1c1c2b',
+      tickprefix: '$', tickfont: { size: 11 },
+      range: [xMin - xPad, xMax + xPadR],
+    },
+    yaxis: {
+      title: { text: 'Average Score', font: { size: 13 } },
+      gridcolor: '#1c1c2b', zerolinecolor: '#1c1c2b',
+      ticksuffix: '%', tickfont: { size: 11 },
+      range: [yMin - yPad, yMax + yPad],
+    },
+    images: images,
+    showlegend: false,
+    margin: { t: 16, r: 32, b: 56, l: 56 },
+    hovermode: 'closest',
+    hoverlabel: {
+      bgcolor: '#1c1c2b', bordercolor: '#262640',
+      font: { family: 'Inter, sans-serif', size: 12, color: '#e2e8f0' },
+    },
+  };
+
+  Plotly.newPlot('chart', traces, layout, {
+    responsive: true,
+    displaylogo: false,
+    modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+  });
+}
+
+// ═══════════════════════════════════════════════════════════
+// Leaderboard Table
+// ═══════════════════════════════════════════════════════════
+const HIGHER = new Set(['score','precision','recall','resolve']);
+const LOWER  = new Set(['cost','out_tok_k','time_h','turns']);
+
+function isBest(val, key, fdata) {
+  if (HIGHER.has(key)) return Math.abs(val - Math.max(...fdata.map(d => d[key]))) < 0.005;
+  if (LOWER.has(key))  return Math.abs(val - Math.min(...fdata.map(d => d[key]))) < 0.005;
+  return false;
+}
+function fmtNum(v, d) { return v.toFixed(d); }
+
+function orgIcon(d) {
+  const lk = ORG_KEY[d.org];
+  if (lk && LOGOS[lk]) {
+    return '<img class="org-logo" src="' + LOGOS[lk] + '" alt="' + d.org + '">';
+  }
+  return '<span class="org-badge" style="background:' + d.org_color + '">' + d.org.charAt(0) + '</span>';
+}
+
+let curKey = 'rank', curAsc = true;
+function defaultAsc(key) {
+  if (HIGHER.has(key)) return false;
+  if (key === 'rank' || key === 'model_display' || key === 'agent_display') return true;
+  return true;
+}
+
+function renderTable() {
+  const fdata = getFiltered();
+  // Re-rank filtered data
+  const ranked = [...fdata].sort((a, b) => b.score - a.score);
+  ranked.forEach((d, i) => d._rank = i + 1);
+
+  const maxScore = Math.max(...fdata.map(d => d.score));
+  function numCell(v, k, dec) {
+    const cls = isBest(v, k, fdata) ? 'num best-val' : 'num';
+    return '<td class="' + cls + '">' + fmtNum(v, dec) + '</td>';
+  }
+
+  const sorted = [...ranked].sort((a, b) => {
+    const sk = curKey === 'rank' ? '_rank' : curKey;
+    const va = a[sk], vb = b[sk];
+    if (typeof va === 'string') return curAsc ? va.localeCompare(vb) : vb.localeCompare(va);
+    return curAsc ? va - vb : vb - va;
+  });
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = sorted.map(d => {
+    const r = d._rank;
+    let medal = r;
+    if (r === 1) medal = '<span class="rank-medal">\uD83E\uDD47</span>';
+    else if (r === 2) medal = '<span class="rank-medal">\uD83E\uDD48</span>';
+    else if (r === 3) medal = '<span class="rank-medal">\uD83E\uDD49</span>';
+    const topCls = r <= 3 ? ' top-' + r : '';
+    const barW = (d.score / maxScore * 100).toFixed(1);
+    return '<tr class="' + topCls + '">' +
+      '<td class="rank-cell">' + medal + '</td>' +
+      '<td class="model-cell">' + orgIcon(d) + d.model_display + '</td>' +
+      '<td><span class="agent-badge" style="background:' + d.agent_bg + ';color:' + d.agent_fg + '">' + d.agent_display + '</span></td>' +
+      '<td class="score-cell"><div class="score-bar" style="width:' + barW + '%;background:' + d.color + '"></div><span class="score-val' + (isBest(d.score,'score',fdata) ? ' best-val' : '') + '">' + fmtNum(d.score, 2) + '</span></td>' +
+      numCell(d.precision, 'precision', 2) +
+      numCell(d.recall, 'recall', 2) +
+      numCell(d.resolve, 'resolve', 2) +
+      numCell(d.cost, 'cost', 2) +
+      '<td class="num' + (isBest(d.out_tok_k,'out_tok_k',fdata) ? ' best-val' : '') + '">' + d.out_tok_k.toLocaleString() + '</td>' +
+      numCell(d.time_h, 'time_h', 2) +
+      '<td class="num' + (isBest(d.turns,'turns',fdata) ? ' best-val' : '') + '">' + d.turns.toLocaleString() + '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+// Initial render
+renderChart();
+renderTable();
+
+// Toggle handler
+document.getElementById('officialToggle').addEventListener('change', () => {
+  renderChart();
+  renderTable();
+});
+
+// Sort handler
+document.querySelectorAll('th[data-key]').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if (key === curKey) { curAsc = !curAsc; }
+    else { curKey = key; curAsc = defaultAsc(key); }
+    document.querySelectorAll('th[data-key]').forEach(h => h.classList.remove('sort-asc','sort-desc'));
+    th.classList.add(curAsc ? 'sort-asc' : 'sort-desc');
+    renderTable();
+  });
+});
+
+// Tooltip for [data-tip] elements
+(function() {
+  const tip = document.createElement('div');
+  tip.className = 'tip-popup';
+  document.body.appendChild(tip);
+  document.querySelectorAll('[data-tip]').forEach(el => {
+    el.addEventListener('mouseenter', e => {
+      const rect = el.getBoundingClientRect();
+      tip.textContent = el.dataset.tip;
+      tip.style.left = (rect.left + rect.width/2) + 'px';
+      tip.style.top = (rect.bottom + 6) + 'px';
+      tip.style.transform = 'translateX(-50%)';
+      tip.classList.add('show');
+    });
+    el.addEventListener('mouseleave', () => tip.classList.remove('show'));
+  });
+})();
+</script>
+</body>
+</html>
