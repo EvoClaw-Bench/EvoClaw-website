@@ -638,6 +638,32 @@ function renderChart() {
     displaylogo: false,
     modeBarButtonsToRemove: ['lasso2d', 'select2d'],
   });
+
+  const chartEl = document.getElementById('chart');
+  const initXRange = xMax + xPadR - (xMin - xPad);
+  const initYRange = yMax + yPad - (yMin - yPad);
+  const BASE_FONT = 13, BASE_XSHIFT = 18;
+  let scaling = false;
+
+  chartEl.on('plotly_relayout', function(ev) {
+    if (scaling) return;
+    const xl = chartEl.layout.xaxis.range;
+    const yl = chartEl.layout.yaxis.range;
+    if (!xl || !yl) return;
+    const curXRange = xl[1] - xl[0];
+    const curYRange = yl[1] - yl[0];
+    const scale = Math.sqrt((initXRange / curXRange) * (initYRange / curYRange));
+    const newFont = Math.round(BASE_FONT * scale);
+    const newShift = Math.round(BASE_XSHIFT * scale);
+
+    const update = {};
+    annotations.forEach((a, i) => {
+      update['annotations[' + i + '].font.size'] = newFont;
+      update['annotations[' + i + '].xshift'] = a.xanchor === 'right' ? -newShift : newShift;
+    });
+    scaling = true;
+    Plotly.relayout(chartEl, update).then(() => { scaling = false; });
+  });
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -663,7 +689,7 @@ function orgIcon(d) {
 function agentIcon(d) {
   const ak = AGENT_KEY[d.agent];
   if (ak && LOGOS[ak]) {
-    const extraStyle = (ak === 'openhands') ? ' style="width:25px;height:25px"' : '';
+    const extraStyle = (ak === 'openhands') ? ' style="width:25px;height:25px;margin-left:-1.5px"' : '';
     return '<img class="agent-icon"' + extraStyle + ' src="' + LOGOS[ak] + '" alt="' + d.agent + '">';
   }
   return '';
@@ -707,7 +733,7 @@ function renderTable() {
     return '<tr class="' + topCls + '">' +
       '<td class="rank-cell">' + medal + '</td>' +
       '<td class="model-cell">' + orgIcon(d) + d.model_display + '</td>' +
-      '<td style="vertical-align:middle"><span class="agent-cell" style="' + (d.agent === 'openhands' ? 'gap:5px' : '') + '">' + agentIcon(d) + '<span class="agent-badge" style="background:' + d.agent_bg + ';color:' + d.agent_fg + '">' + d.agent_display + '</span></span></td>' +
+      '<td style="vertical-align:middle"><span class="agent-cell" style="' + (d.agent === 'openhands' ? 'gap:6.5px' : '') + '">' + agentIcon(d) + '<span class="agent-badge" style="background:' + d.agent_bg + ';color:' + d.agent_fg + '">' + d.agent_display + '</span></span></td>' +
       '<td class="score-cell"><div class="score-bar" style="width:' + barW + '%;background:' + d.agent_fg + '"></div><span class="score-val' + (isBest(d.score,'score',fdata) ? ' best-val' : '') + '">' + fmtNum(d.score, 2) + '</span></td>' +
       numCell(d.precision, 'precision', 2) +
       numCell(d.recall, 'recall', 2) +
