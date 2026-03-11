@@ -158,10 +158,10 @@ footer a:hover{color:var(--accent)}
           <th data-key="rank" class="sort-asc">#</th>
           <th data-key="model_display" data-type="str">Model</th>
           <th data-key="agent_display" data-type="str">Agent</th>
-          <th data-key="score" class="num-col has-tip" data-tip="F1(Precision, Recall), macro-averaged per evolution range. Primary metric.">Score (%)</th>
-          <th data-key="precision" class="num-col has-tip" data-tip="(fixed+1)/(fixed+broken+1), measures regression avoidance. Macro-avg per evolution range.">Precision (%)</th>
-          <th data-key="recall" class="num-col has-tip" data-tip="fixed/target, measures how many required tests are fixed. Macro-avg per evolution range.">Recall (%)</th>
-          <th data-key="resolve" class="num-col has-tip" data-tip="% of milestones fully resolved (all tests pass). Macro-avg per evolution range.">Resolve (%)</th>
+          <th data-key="score" class="num-col has-tip" data-tip="F1 of Precision and Recall. Balances fixing required tests and avoiding regressions.">Score (%)</th>
+          <th data-key="precision" class="num-col has-tip" data-tip="Ratio of bugs fixed without breaking existing tests. Higher means cleaner changes.">Precision (%)</th>
+          <th data-key="recall" class="num-col has-tip" data-tip="Ratio of required test cases successfully fixed. Higher means the agent addresses more of the required changes.">Recall (%)</th>
+          <th data-key="resolve" class="num-col has-tip" data-tip="% of milestones fully resolved, where all required tests pass with no regressions.">Resolve (%)</th>
           <th data-key="cost" class="num-col has-tip" data-tip="Average API cost per evolution range ($)">Cost ($)</th>
           <th data-key="out_tok_k" class="num-col has-tip" data-tip="Average output tokens per evolution range, incl. reasoning/thinking (K)">Out Tok. (K)</th>
           <th data-key="time_h" class="num-col has-tip" data-tip="Average wall-clock time per evolution range (hours)">Time (h)</th>
