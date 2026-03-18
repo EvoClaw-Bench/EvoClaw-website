@@ -112,21 +112,21 @@ CHART_TEXT_POS = {
 
 # ── Per-entry colors (brightened for dark bg) ───────────────────────────────
 ENTRY_COLORS = {
-    ("claude-code", "claude-sonnet-4-5-20250929"): "#F5D5C4",
-    ("claude-code", "claude-opus-4-5-20251101"): "#E8A08C",
+    ("claude-code", "claude-sonnet-4-5-20250929"): "#D07A5E",
+    ("claude-code", "claude-opus-4-5-20251101"): "#D07A5E",
     ("claude-code", "claude-sonnet-4-6"): "#D07A5E",
-    ("claude-code", "claude-opus-4-6"): "#B85A38",
-    ("codex", "gpt-5.2-codex"): "#C8E6C8",
+    ("claude-code", "claude-opus-4-6"): "#D07A5E",
+    ("codex", "gpt-5.2-codex"): "#90C890",
     ("codex", "gpt-5.2"): "#90C890",
-    ("codex", "gpt-5.3-codex"): "#68AA68",
-    ("gemini-cli", "gemini-3-pro"): "#B8D4EC",
+    ("codex", "gpt-5.3-codex"): "#90C890",
+    ("gemini-cli", "gemini-3-pro"): "#7AAED8",
     ("gemini-cli", "gemini-3.1-pro"): "#7AAED8",
-    ("gemini-cli", "gemini-3-flash"): "#5590C0",
-    ("openhands", "minimax-m2.5"): "#E2C4F0",
-    ("openhands", "kimi-k2.5"): "#C89DDC",
-    ("openhands", "gemini-3-flash"): "#B080CC",
-    ("openhands", "gpt-5.3-codex"): "#9966BB",
-    ("openhands", "claude-opus-4-6"): "#8050AA",
+    ("gemini-cli", "gemini-3-flash"): "#7AAED8",
+    ("openhands", "minimax-m2.5"): "#E06070",
+    ("openhands", "kimi-k2.5"): "#D4A050",
+    ("openhands", "gemini-3-flash"): "#7AAED8",
+    ("openhands", "gpt-5.3-codex"): "#90C890",
+    ("openhands", "claude-opus-4-6"): "#D07A5E",
 }
 
 ORG_COLORS = {
@@ -140,7 +140,7 @@ AGENT_COLORS = {
     "claude-code": {"bg": "rgba(217,119,87,0.15)", "fg": "#D97757"},
     "codex": {"bg": "rgba(16,163,127,0.15)", "fg": "#10A37F"},
     "gemini-cli": {"bg": "rgba(66,133,244,0.15)", "fg": "#4285F4"},
-    "openhands": {"bg": "rgba(255,255,139,0.18)", "fg": "#e6e67a"},
+    "openhands": {"bg": "rgba(232,186,58,0.18)", "fg": "#e0b040"},
 }
 
 
@@ -288,6 +288,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<script>(function(){var t=localStorage.getItem('evoclaw-theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.theme-btn').forEach(function(b){b.classList.toggle('active',b.dataset.themeVal==='light')})})}})()</script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
@@ -295,6 +296,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   --border:#262640;--text-1:#e2e8f0;--text-2:#94a3b8;--text-3:#64748b;
   --accent:#6366f1;--accent-light:#818cf8;
 }
+[data-theme="light"]{
+  --bg-0:#f7f8fc;--bg-1:#ffffff;--bg-2:#eef0f8;--bg-3:#e2e5f0;
+  --border:#cfd4e2;--text-1:#1a1d2e;--text-2:#4a5068;--text-3:#7c839a;
+  --accent:#5b5cf6;--accent-light:#4f46e5;
+}
+body,.panel,.nav-btn,.table-wrap{transition:background-color .3s ease,border-color .3s ease}
 html{scroll-behavior:smooth}
 body{background:var(--bg-0);color:var(--text-1);font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;min-height:100vh}
 .container{max-width:1280px;margin:0 auto;padding:2.5rem 1.5rem}
@@ -371,10 +378,10 @@ footer a{color:var(--text-2);text-decoration:none}
 footer a:hover{color:var(--accent)}
 
 /* ── Tooltip ──────────────────────────────────────────────── */
-.tip-popup{position:fixed;background:#262640;color:#e2e8f0;border:1px solid #3d3d5c;border-radius:8px;
+.tip-popup{position:fixed;background:var(--bg-3);color:var(--text-1);border:1px solid var(--border);border-radius:8px;
   padding:6px 14px;font-size:.82rem;font-weight:500;white-space:nowrap;
   pointer-events:none;z-index:9999;opacity:0;transition:opacity .15s;
-  box-shadow:0 4px 16px rgba(0,0,0,.4)}
+  box-shadow:0 4px 16px rgba(0,0,0,.15)}
 .tip-popup.show{opacity:1}
 
 /* ── Toggle ───────────────────────────────────────────────── */
@@ -387,14 +394,42 @@ footer a:hover{color:var(--accent)}
 .js-plotly-plot .plotly .modebar-btn path{fill:var(--text-3) !important}
 .js-plotly-plot .plotly .modebar-btn:hover path{fill:var(--accent) !important}
 
+/* ── Theme toggle ─────────────────────────────────────────── */
+.theme-toggle{position:fixed;top:1.25rem;right:1.5rem;z-index:100;
+  display:flex;border-radius:10px;padding:2px;
+  background:var(--bg-3);border:1px solid var(--border);
+  box-shadow:0 2px 8px rgba(0,0,0,.1);
+  transition:background-color .3s,border-color .3s}
+.theme-btn{width:30px;height:26px;border:none;background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--text-3);transition:background-color .2s,color .2s,box-shadow .2s;
+  border-radius:7px;padding:0}
+.theme-btn svg{width:14px;height:14px}
+.theme-btn:hover{color:var(--text-1)}
+.theme-btn.active{background:var(--bg-1);color:var(--accent);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+[data-theme="light"] tr.top-1 td{background:rgba(251,191,36,.08)}
+[data-theme="light"] tr.top-2 td{background:rgba(160,160,180,.06)}
+[data-theme="light"] tr.top-3 td{background:rgba(205,127,50,.06)}
+[data-theme="light"] .score-bar{opacity:.25}
+[data-theme="light"] tr:hover td{background:rgba(79,70,229,.06)}
+
 @media(max-width:768px){
   .hero-title{font-size:1.4rem}
   .container{padding:1.5rem 1rem}
   #chart{height:360px}
+  .theme-toggle{top:1rem;right:1rem}
 }
 </style>
 </head>
 <body>
+<div class="theme-toggle">
+  <button class="theme-btn active" data-theme-val="dark" onclick="setTheme('dark')" aria-label="Dark mode">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.9 8.6a6 6 0 01-6.5-6.5A6 6 0 108.6 13.9a6 6 0 005.3-5.3z"/></svg>
+  </button>
+  <button class="theme-btn" data-theme-val="light" onclick="setTheme('light')" aria-label="Light mode">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
+  </button>
+</div>
 <div class="container">
 
 <!-- ═══ Header ═══ -->
@@ -407,13 +442,13 @@ footer a:hover{color:var(--accent)}
     <a class="nav-btn active" href="#leaderboard">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h8v5a4 4 0 01-8 0V2z"/><path d="M4 4H2.5a1 1 0 00-1 1v.5A2.5 2.5 0 004 8"/><path d="M12 4h1.5a1 1 0 011 1v.5A2.5 2.5 0 0112 8"/><path d="M6 11v2h4v-2"/><path d="M5 13h6"/></svg>
       Leaderboard</a>
-    <a class="nav-btn" href="#" target="_blank">
+    <a class="nav-btn" href="https://arxiv.org/pdf/2603.13428" target="_blank">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1H4a1 1 0 00-1 1v12a1 1 0 001 1h8a1 1 0 001-1V5L9 1z"/><path d="M9 1v4h4"/><path d="M5 8h6M5 11h4"/></svg>
       Paper</a>
-    <a class="nav-btn" href="#" target="_blank">
+    <a class="nav-btn" href="https://huggingface.co/datasets/hyd2apse/EvoClaw-data" target="_blank">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.24 2 5 2s5-.9 5-2V4"/><path d="M3 8c0 1.1 2.24 2 5 2s5-.9 5-2"/></svg>
       Data</a>
-    <a class="nav-btn" href="#" target="_blank">
+    <a class="nav-btn" href="https://github.com/Hydrapse/EvoClaw" target="_blank">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="5 4 1 8 5 12"/><polyline points="11 4 15 8 11 12"/><line x1="9" y1="2" x2="7" y2="14"/></svg>
       Code</a>
   </nav>
@@ -467,6 +502,31 @@ const LOGOS = "__LOGOS__";
 const ORG_KEY = { 'Anthropic':'anthropic','OpenAI':'openai','Google':'google','Moonshot AI':'moonshot','MiniMax':'minimax' };
 const AGENT_KEY = { 'claude-code':'claude-code','codex':'codex','gemini-cli':'gemini-cli','openhands':'openhands' };
 
+function isLight() { return document.documentElement.getAttribute('data-theme') === 'light'; }
+function themeColors() {
+  return isLight() ? {
+    paper:'#ffffff', plot:'#eef0f8', grid:'#e2e5f0', text:'#1a1d2e',
+    text2:'#4a5068', hover_bg:'#e2e5f0', hover_border:'#cfd4e2',
+  } : {
+    paper:'#0e0e16', plot:'#14141f', grid:'#1c1c2b', text:'#e2e8f0',
+    text2:'#c8d0dc', hover_bg:'#1c1c2b', hover_border:'#262640',
+  };
+}
+function setTheme(mode) {
+  if (mode === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  else document.documentElement.removeAttribute('data-theme');
+  localStorage.setItem('evoclaw-theme', mode);
+  document.querySelectorAll('.theme-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.themeVal === mode);
+  });
+  renderChart(); renderTable();
+}
+
+function logoKey(key) {
+  if (isLight() && key === 'moonshot' && LOGOS['moonshot_light']) return 'moonshot_light';
+  return key;
+}
+
 // ═══════════════════════════════════════════════════════════
 // Shared state
 // ═══════════════════════════════════════════════════════════
@@ -487,14 +547,15 @@ function getFiltered() {
 // Chart
 // ═══════════════════════════════════════════════════════════
 function renderChart() {
+  const tc = themeColors();
   const fdata = getFiltered();
 
   const allX = fdata.map(d => d.cost), allY = fdata.map(d => d.score);
   const xMin = Math.min(...allX), xMax = Math.max(...allX);
   const yMin = Math.min(...allY), yMax = Math.max(...allY);
   const xPad = (xMax - xMin) * 0.15, xPadR = (xMax - xMin) * 0.25, yPad = (yMax - yMin) * 0.15;
-  const iconX = (xMax - xMin + 2*xPad) * 0.025;
-  const iconY = (yMax - yMin + 2*yPad) * 0.055;
+  const iconX = (xMax - xMin + 2*xPad) * 0.025 * 0.9;
+  const iconY = (yMax - yMin + 2*yPad) * 0.055 * 0.9;
 
   const traces = orgs.map(org => {
     const pts = fdata.filter(d => d.org === org.key);
@@ -510,9 +571,9 @@ function renderChart() {
       mode: 'markers+text',
       type: 'scatter',
       name: org.key,
-      marker: { size: 28, color: 'rgba(0,0,0,0)' },
+      marker: { size: 25, color: 'rgba(0,0,0,0)' },
       textposition: pts.map(p => p.chart_textpos || 'middle right'),
-      textfont: { size: 13, color: '#c8d0dc', family: 'Inter, sans-serif' },
+      textfont: { size: 13, color: tc.text2, family: 'Inter, sans-serif' },
       hovertemplate:
         '<b>%{customdata[0]}</b> (<b>%{customdata[1]}</b>)<br>' +
         'Score: %{y:.1f}%<br>' +
@@ -527,6 +588,38 @@ function renderChart() {
     };
   }).filter(Boolean);
 
+  // Pareto frontier line
+  const frontierModels = ['kimi-k2.5', 'gemini-3-flash', 'gpt-5.3-codex', 'claude-opus-4-6'];
+  const frontierPts = frontierModels.map(m => {
+    const entries = fdata.filter(d => d.model === m);
+    if (!entries.length) return null;
+    return entries.reduce((best, d) => d.score > best.score ? d : best);
+  }).filter(Boolean).sort((a, b) => a.cost - b.cost);
+  if (frontierPts.length > 1) {
+    traces.push({
+      x: frontierPts.map(p => p.cost),
+      y: frontierPts.map(p => p.score),
+      mode: 'lines',
+      type: 'scatter',
+      line: { color: 'rgba(129,82,236,0.6)', width: 2.5, dash: 'dot' },
+      hoverinfo: 'skip',
+      showlegend: false,
+    });
+  }
+
+  const frontierSet = new Set(frontierPts.map(p => p.agent + '|' + p.model));
+
+  // Center dots: purple for frontier, entry color for others
+  traces.push({
+    x: fdata.map(d => d.cost),
+    y: fdata.map(d => d.score),
+    mode: 'markers',
+    type: 'scatter',
+    marker: { size: 5, color: fdata.map(d => frontierSet.has(d.agent + '|' + d.model) ? '#a78bfa' : d.color) },
+    hoverinfo: 'skip',
+    showlegend: false,
+  });
+
   const vGap = iconY * 1.1;
   const agentIconY = iconY;
   // Agent colors for pill backgrounds
@@ -534,7 +627,7 @@ function renderChart() {
     'claude-code': 'rgba(217,119,87,0.18)',
     'codex': 'rgba(16,163,127,0.18)',
     'gemini-cli': 'rgba(66,133,244,0.18)',
-    'openhands': 'rgba(255,255,139,0.18)',
+    'openhands': 'rgba(232,186,58,0.18)',
   };
 
   function hexToRgba(hex, a) {
@@ -550,12 +643,18 @@ function renderChart() {
   }
 
   const pillW = iconX * 1.6;
-  const pillH = iconY * 2 + vGap * 0.6;
+  const pillH = iconY * 2.4 + vGap * 0.8;
   const images = [];
   fdata.forEach(d => {
     const orgK = ORG_KEY[d.org];
     const agentK = AGENT_KEY[d.agent];
-    const pillColor = (d.agent === 'openhands') ? hexToRgba(d.org_color, 0.25) : (AGENT_PILL[d.agent] || 'rgba(128,128,128,0.15)');
+    let pillColor;
+    if (d.agent === 'openhands') {
+      const oc = (isLight() && d.org_color === '#FFFFFF') ? '#333344' : d.org_color;
+      pillColor = hexToRgba(oc, 0.25);
+    } else {
+      pillColor = AGENT_PILL[d.agent] || 'rgba(128,128,128,0.15)';
+    }
 
     // Pill background (below icons)
     images.push({
@@ -568,11 +667,12 @@ function renderChart() {
     });
 
     // Model org icon (top)
-    if (orgK && LOGOS[orgK]) {
+    const orgLK = logoKey(orgK);
+    if (orgLK && LOGOS[orgLK]) {
       images.push({
-        source: LOGOS[orgK],
+        source: LOGOS[orgLK],
         xref: 'x', yref: 'y',
-        x: d.cost, y: d.score + vGap/2,
+        x: d.cost, y: d.score + vGap * 0.7,
         sizex: iconX, sizey: iconY,
         xanchor: 'center', yanchor: 'middle',
         layer: 'above',
@@ -584,7 +684,7 @@ function renderChart() {
       images.push({
         source: LOGOS[agentK],
         xref: 'x', yref: 'y',
-        x: d.cost, y: d.score - vGap/2,
+        x: d.cost, y: d.score - vGap * 0.7,
         sizex: iconX * agentScale, sizey: agentIconY * agentScale,
         xanchor: 'center', yanchor: 'middle',
         layer: 'above',
@@ -594,31 +694,35 @@ function renderChart() {
 
   const annotations = fdata.map(d => {
     const isLeft = (d.chart_textpos || 'middle right') === 'middle left';
+    const onFrontier = frontierSet.has(d.agent + '|' + d.model);
+    const label = onFrontier
+      ? '<b>' + d.chart_label + '</b><br>(' + d.agent_display + ')'
+      : d.chart_label + '<br>(' + d.agent_display + ')';
     return {
       x: d.cost, y: d.score, xref: 'x', yref: 'y',
-      text: d.chart_label + '<br>(' + d.agent_display + ')',
+      text: label,
       showarrow: false,
       xanchor: isLeft ? 'right' : 'left',
       yanchor: 'middle',
       align: isLeft ? 'right' : 'left',
       xshift: isLeft ? -18 : 18,
-      font: { size: 13, color: '#c8d0dc', family: 'Inter, sans-serif' },
+      font: { size: onFrontier ? 14 : 13, color: onFrontier ? (isLight() ? '#6d28d9' : '#c4b5fd') : tc.text2, family: 'Inter, sans-serif' },
     };
   });
 
   const layout = {
-    paper_bgcolor: '#0e0e16',
-    plot_bgcolor: '#14141f',
-    font: { color: '#e2e8f0', family: 'Inter, system-ui, sans-serif', size: 12 },
+    paper_bgcolor: tc.paper,
+    plot_bgcolor: tc.plot,
+    font: { color: tc.text, family: 'Inter, system-ui, sans-serif', size: 12 },
     xaxis: {
       title: { text: 'Average Cost Per Evolution Range (USD)', font: { size: 13 } },
-      gridcolor: '#1c1c2b', zerolinecolor: '#1c1c2b',
+      gridcolor: tc.grid, zerolinecolor: tc.grid,
       tickprefix: '$', tickfont: { size: 11 },
       range: [xMin - xPad, xMax + xPadR],
     },
     yaxis: {
       title: { text: 'Average Score', font: { size: 13 } },
-      gridcolor: '#1c1c2b', zerolinecolor: '#1c1c2b',
+      gridcolor: tc.grid, zerolinecolor: tc.grid,
       ticksuffix: '%', tickfont: { size: 11 },
       range: [yMin - yPad, yMax + yPad],
     },
@@ -628,8 +732,8 @@ function renderChart() {
     margin: { t: 16, r: 32, b: 56, l: 56 },
     hovermode: 'closest',
     hoverlabel: {
-      bgcolor: '#1c1c2b', bordercolor: '#262640',
-      font: { family: 'Inter, sans-serif', size: 12, color: '#e2e8f0' },
+      bgcolor: tc.hover_bg, bordercolor: tc.hover_border,
+      font: { family: 'Inter, sans-serif', size: 12, color: tc.text },
     },
   };
 
@@ -678,7 +782,7 @@ function isBest(val, key, fdata) {
 function fmtNum(v, d) { return v.toFixed(d); }
 
 function orgIcon(d) {
-  const lk = ORG_KEY[d.org];
+  const lk = logoKey(ORG_KEY[d.org]);
   if (lk && LOGOS[lk]) {
     return '<img class="org-logo" src="' + LOGOS[lk] + '" alt="' + d.org + '">';
   }
@@ -702,6 +806,7 @@ function defaultAsc(key) {
 
 function renderTable() {
   const fdata = getFiltered();
+  const light = isLight();
   // Re-rank filtered data
   const ranked = [...fdata].sort((a, b) => b.score - a.score);
   ranked.forEach((d, i) => d._rank = i + 1);
@@ -728,10 +833,12 @@ function renderTable() {
     else if (r === 3) medal = '<span class="rank-medal">\uD83E\uDD49</span>';
     const topCls = r <= 3 ? ' top-' + r : '';
     const barW = (d.score / maxScore * 100).toFixed(1);
+    const _abg = (light && d.agent === 'openhands') ? 'rgba(139,117,0,0.15)' : d.agent_bg;
+    const _afg = (light && d.agent === 'openhands') ? '#8B7500' : d.agent_fg;
     return '<tr class="' + topCls + '">' +
       '<td class="rank-cell">' + medal + '</td>' +
       '<td class="model-cell">' + orgIcon(d) + d.model_display + '</td>' +
-      '<td style="vertical-align:middle"><span class="agent-cell" style="' + (d.agent === 'openhands' ? 'gap:6.5px' : '') + '">' + agentIcon(d) + '<span class="agent-badge" style="background:' + d.agent_bg + ';color:' + d.agent_fg + '">' + d.agent_display + '</span></span></td>' +
+      '<td style="vertical-align:middle"><span class="agent-cell" style="' + (d.agent === 'openhands' ? 'gap:6.5px' : '') + '">' + agentIcon(d) + '<span class="agent-badge" style="background:' + _abg + ';color:' + _afg + '">' + d.agent_display + '</span></span></td>' +
       '<td class="score-cell"><div class="score-bar" style="width:' + barW + '%;background:' + d.agent_fg + '"></div><span class="score-val' + (isBest(d.score,'score',fdata) ? ' best-val' : '') + '">' + fmtNum(d.score, 2) + '</span></td>' +
       numCell(d.precision, 'precision', 2) +
       numCell(d.recall, 'recall', 2) +
