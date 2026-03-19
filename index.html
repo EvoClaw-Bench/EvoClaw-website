@@ -177,7 +177,7 @@ footer a:hover{color:var(--accent)}
 <!-- ═══ Chart ═══ -->
 <section class="panel" id="overview">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-    <h2 class="panel-title" style="margin-bottom:0">Overall Cost / Performance</h2>
+    <h2 class="panel-title" style="margin-bottom:0">Overall Cost / Performance on EvoClaw</h2>
     <label class="toggle-label">
       <input type="checkbox" id="officialToggle">
       <span class="toggle-text">Official agent only</span>
@@ -447,7 +447,14 @@ function renderChart() {
       range: [yMin - yPad, yMax + yPad],
     },
     images: images,
-    annotations: annotations,
+    annotations: annotations.concat([{
+      text: '<a href="https://evo-claw.com/" style="color:#999">https://evo-claw.com</a>',
+      xref: 'paper', yref: 'paper', x: 1, y: 0,
+      xanchor: 'right', yanchor: 'bottom',
+      xshift: 0, yshift: -54,
+      showarrow: false,
+      font: { size: 15, color: '#999' },
+    }]),
     showlegend: false,
     margin: { t: 16, r: 32, b: 56, l: 56 },
     hovermode: 'closest',
