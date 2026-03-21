@@ -317,6 +317,8 @@ body{background:var(--bg-0);color:var(--text-1);font-family:'Inter',system-ui,-a
 .hero-title .sep{color:var(--text-3);font-weight:400;margin:0 .15em}
 .hero-title .desc{color:var(--text-2);font-weight:400;font-size:.85em}
 .hero-desc{color:var(--text-3);font-size:.9rem;margin:0 0 1.25rem;line-height:1.7}
+.hero-badges{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem}
+.hero-badges a img{height:22px}
 .nav-btns{display:flex;gap:.6rem;justify-content:flex-start;flex-wrap:wrap}
 .nav-btn{display:inline-flex;align-items:center;gap:.45rem;
   padding:.55rem 1.2rem;border-radius:8px;font-size:.875rem;font-weight:500;
@@ -440,6 +442,11 @@ footer a:hover{color:var(--accent)}
     <span class="brand">EvoClaw</span><span class="sep">:</span><span class="desc">Evaluating AI Agents on Continuous Software Evolution</span>
   </h1>
   <p class="hero-desc">Long-running agents build customized software (a &ldquo;Claw&rdquo;) to interact with their environments. For practical use in complex, real-world tasks, these agents must fully and autonomously evolve this software in response to a continuous stream of end-user requirements. EvoClaw evaluates how well frontier LLM agents handle this continuous development, benchmarking them against real-world evolution itineraries from open-source repositories.</p>
+  <div class="hero-badges">
+    <a href="https://arxiv.org/pdf/2603.13428" target="_blank"><img src="https://img.shields.io/badge/arXiv-2603.13428-b31b1b?logo=arxiv&logoColor=white" alt="arXiv"></a>
+    <a href="https://huggingface.co/datasets/hyd2apse/EvoClaw-data" target="_blank"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-Dataset-yellow" alt="HuggingFace"></a>
+    <a href="https://evo-claw.com/" target="_blank"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Website-evo--claw.com-blue" alt="Website"></a>
+  </div>
   <nav class="nav-btns">
     <a class="nav-btn active" href="#leaderboard">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h8v5a4 4 0 01-8 0V2z"/><path d="M4 4H2.5a1 1 0 00-1 1v.5A2.5 2.5 0 004 8"/><path d="M12 4h1.5a1 1 0 011 1v.5A2.5 2.5 0 0112 8"/><path d="M6 11v2h4v-2"/><path d="M5 13h6"/></svg>
