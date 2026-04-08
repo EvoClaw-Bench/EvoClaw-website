@@ -13,15 +13,49 @@ import pathlib
 import pandas as pd
 
 VIZ_DIR = pathlib.Path(__file__).resolve().parent
-AGENTBENCH_ROOT = pathlib.Path("/home/gangda/workspace/AgentBench")
-ANALYSIS_ROOT = AGENTBENCH_ROOT / "analysis"
-sys.path.insert(0, str(ANALYSIS_ROOT))
-
-from common import load_e2e, AGENT_MODEL_ORDER
-
-DATA_DIR = ANALYSIS_ROOT / "data"
+DATA_DIR = VIZ_DIR / "data"
 E2E_TRIAL_CSV = DATA_DIR / "e2e_trial.csv"
 OPENHANDS_TRIAL_CSV = DATA_DIR / "openhands_e2e_trial.csv"
+
+# ── Agent-model display names (for e2e.csv → leaderboard mapping) ──────────
+AGENT_MODEL_DISPLAY = {
+    ("claude-code", "claude-sonnet-4-5-20250929"): "CC Sonnet 4.5",
+    ("claude-code", "claude-sonnet-4-6"): "CC Sonnet 4.6",
+    ("claude-code", "claude-opus-4-5-20251101"): "CC Opus 4.5",
+    ("claude-code", "claude-opus-4-6"): "CC Opus 4.6",
+    ("codex", "gpt-5.2-codex"): "Codex GPT-5.2C",
+    ("codex", "gpt-5.2"): "Codex GPT-5.2",
+    ("codex", "gpt-5.3-codex"): "Codex GPT-5.3C",
+    ("codex", "gpt-5.4"): "Codex GPT-5.4",
+    ("gemini-cli", "gemini-3-flash"): "Gemini Flash",
+    ("gemini-cli", "gemini-3-flash-preview"): "Gemini Flash",
+    ("gemini-cli", "gemini-3-pro"): "Gemini Pro",
+    ("gemini-cli", "gemini-3-pro-preview"): "Gemini Pro",
+    ("gemini-cli", "gemini-3.1-pro"): "Gemini 3.1 Pro",
+}
+
+AGENT_MODEL_ORDER = [
+    "CC Sonnet 4.5", "CC Opus 4.5", "CC Sonnet 4.6", "CC Opus 4.6",
+    "Codex GPT-5.2C", "Codex GPT-5.2", "Codex GPT-5.3C", "Codex GPT-5.4",
+    "Gemini Pro", "Gemini 3.1 Pro", "Gemini Flash",
+]
+
+
+def load_e2e() -> pd.DataFrame:
+    """Load per-milestone e2e results from e2e.csv."""
+    df = pd.read_csv(DATA_DIR / "e2e.csv")
+    if "is_resolved" in df.columns:
+        df["is_resolved"] = df["is_resolved"].astype(bool)
+    elif "eval_status" in df.columns:
+        df["is_resolved"] = df["eval_status"] == "passed"
+    df["agent_model"] = df.apply(
+        lambda r: AGENT_MODEL_DISPLAY.get(
+            (r["agent_name"], r["model"]),
+            f"{r['agent_name']}_{r['model']}",
+        ),
+        axis=1,
+    )
+    return df
 
 # ── Model name normalization ────────────────────────────────────────────────
 MODEL_ALIASES = {
@@ -35,7 +69,7 @@ AGENT_GROUPS = [
         "claude-sonnet-4-5-20250929", "claude-opus-4-5-20251101",
         "claude-sonnet-4-6", "claude-opus-4-6",
     ]),
-    ("codex", ["gpt-5.2-codex", "gpt-5.2", "gpt-5.3-codex"]),
+    ("codex", ["gpt-5.2-codex", "gpt-5.2", "gpt-5.3-codex", "gpt-5.4"]),
     ("gemini-cli", ["gemini-3-pro", "gemini-3.1-pro", "gemini-3-flash"]),
 ]
 OPENHANDS_MODELS = [
@@ -52,6 +86,7 @@ MODEL_DISPLAY = {
     "gpt-5.2-codex": "GPT 5.2 Codex",
     "gpt-5.2": "GPT 5.2",
     "gpt-5.3-codex": "GPT 5.3 Codex",
+    "gpt-5.4": "GPT 5.4",
     "gemini-3-pro": "Gemini 3 Pro",
     "gemini-3.1-pro": "Gemini 3.1 Pro",
     "gemini-3-flash": "Gemini 3 Flash",
@@ -72,6 +107,7 @@ MODEL_ORG = {
     "gpt-5.2-codex": "OpenAI",
     "gpt-5.2": "OpenAI",
     "gpt-5.3-codex": "OpenAI",
+    "gpt-5.4": "OpenAI",
     "gemini-3-pro": "Google",
     "gemini-3.1-pro": "Google",
     "gemini-3-flash": "Google",
@@ -88,6 +124,7 @@ CHART_LABELS = {
     ("codex", "gpt-5.2-codex"): "GPT-5.2-Codex",
     ("codex", "gpt-5.2"): "GPT-5.2",
     ("codex", "gpt-5.3-codex"): "GPT-5.3-Codex",
+    ("codex", "gpt-5.4"): "GPT-5.4",
     ("gemini-cli", "gemini-3-pro"): "Gemini 3 Pro",
     ("gemini-cli", "gemini-3.1-pro"): "Gemini 3.1 Pro",
     ("gemini-cli", "gemini-3-flash"): "Gemini 3 Flash",
@@ -119,6 +156,7 @@ ENTRY_COLORS = {
     ("codex", "gpt-5.2-codex"): "#90C890",
     ("codex", "gpt-5.2"): "#90C890",
     ("codex", "gpt-5.3-codex"): "#90C890",
+    ("codex", "gpt-5.4"): "#90C890",
     ("gemini-cli", "gemini-3-pro"): "#7AAED8",
     ("gemini-cli", "gemini-3.1-pro"): "#7AAED8",
     ("gemini-cli", "gemini-3-flash"): "#7AAED8",
@@ -154,10 +192,14 @@ def compute_records():
     trial_df["model"] = trial_df["model"].replace(MODEL_ALIASES)
     trial_tokens = {}
     trial_duration = {}
+    trial_cost = {}
+    trial_turns = {}
     for model in trial_df["model"].unique():
         sub = trial_df[trial_df["model"] == model]
         trial_tokens[model] = sub["total_output_tokens"].mean() / 1000
         trial_duration[model] = sub["total_duration_ms"].mean() / 3_600_000
+        trial_cost[model] = sub["total_cost_usd"].mean()
+        trial_turns[model] = sub["total_turns"].mean()
 
     records = []
 
@@ -193,10 +235,10 @@ def compute_records():
             "precision": round(ws_prec.mean() * 100, 2),
             "recall": round(ws_rec.mean() * 100, 2),
             "resolve": round(ws_res.mean() * 100, 2),
-            "cost": round(ws_cost.mean(), 2),
+            "cost": round(ws_cost.mean(), 2) or round(trial_cost.get(model, 0), 2),
             "out_tok_k": round(trial_tokens.get(model, 0)),
             "time_h": round(ws_dur.mean(), 2),
-            "turns": round(ws_turns.mean()),
+            "turns": round(ws_turns.mean()) or round(trial_turns.get(model, 0)),
         })
 
     # OpenHands agents
@@ -266,8 +308,9 @@ def main():
     out_data.mkdir(exist_ok=True)
     for csv_name in ["e2e.csv", "e2e_trial.csv", "openhands_e2e_trial.csv"]:
         src = DATA_DIR / csv_name
-        if src.exists():
-            shutil.copy2(src, out_data / csv_name)
+        dst = out_data / csv_name
+        if src.exists() and src.resolve() != dst.resolve():
+            shutil.copy2(src, dst)
 
     # Generate HTML
     html = HTML_TEMPLATE.replace('"__LEADERBOARD_DATA__"', data_json)
@@ -317,8 +360,9 @@ body{background:var(--bg-0);color:var(--text-1);font-family:'Inter',system-ui,-a
 .hero-title .sep{color:var(--text-3);font-weight:400;margin:0 .15em}
 .hero-title .desc{color:var(--text-2);font-weight:400;font-size:.85em}
 .hero-desc{color:var(--text-3);font-size:.9rem;margin:0 0 1.25rem;line-height:1.7}
-.hero-badges{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.25rem}
-.hero-badges a img{height:22px}
+.news-banner{display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;margin-bottom:1.25rem;border-radius:8px;border:1px solid rgba(16,163,127,.25);background:rgba(16,163,127,.06);font-size:.85rem;color:var(--text-2);line-height:1.5}
+.news-tag{flex-shrink:0;padding:.1rem .45rem;border-radius:4px;background:#10A37F;color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.04em}
+.news-text strong{color:var(--text-1)}
 .nav-btns{display:flex;gap:.6rem;justify-content:flex-start;flex-wrap:wrap}
 .nav-btn{display:inline-flex;align-items:center;gap:.45rem;
   padding:.55rem 1.2rem;border-radius:8px;font-size:.875rem;font-weight:500;
@@ -444,12 +488,11 @@ footer a:hover{color:var(--accent)}
   <h1 class="hero-title">
     <span class="brand">EvoClaw</span><span class="sep">:</span><span class="desc">Evaluating AI Agents on Continuous Software Evolution</span>
   </h1>
-  <p class="hero-desc">Long-running agents build customized software (a &ldquo;Claw&rdquo;) to interact with their environments. For practical use in complex, real-world tasks, these agents must fully and autonomously evolve this software in response to a continuous stream of end-user requirements. EvoClaw evaluates how well frontier LLM agents handle this continuous development, benchmarking them against real-world evolution itineraries from open-source repositories.</p>
-  <div class="hero-badges">
-    <a href="https://arxiv.org/pdf/2603.13428" target="_blank"><img src="https://img.shields.io/badge/arXiv-2603.13428-b31b1b?logo=arxiv&logoColor=white" alt="arXiv"></a>
-    <a href="https://huggingface.co/datasets/hyd2apse/EvoClaw-data" target="_blank"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-Dataset-yellow" alt="HuggingFace"></a>
-    <a href="https://evo-claw.com/" target="_blank"><img src="https://img.shields.io/badge/%F0%9F%8C%90%20Website-evo--claw.com-blue" alt="Website"></a>
+  <div class="news-banner">
+    <span class="news-tag">NEW</span>
+    <span class="news-text"><strong>GPT-5.4</strong> (xhigh) achieves <strong>2nd place</strong> among all models at <strong>33.71%</strong> score.</span>
   </div>
+  <p class="hero-desc">Long-running agents build customized software (a &ldquo;Claw&rdquo;) to interact with their environments. For practical use in complex, real-world tasks, these agents must fully and autonomously evolve this software in response to a continuous stream of end-user requirements. EvoClaw evaluates how well frontier LLM agents handle this continuous development, benchmarking them against real-world evolution itineraries from open-source repositories.</p>
   <nav class="nav-btns">
     <a class="nav-btn active" href="#leaderboard">
       <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2h8v5a4 4 0 01-8 0V2z"/><path d="M4 4H2.5a1 1 0 00-1 1v.5A2.5 2.5 0 004 8"/><path d="M12 4h1.5a1 1 0 011 1v.5A2.5 2.5 0 0112 8"/><path d="M6 11v2h4v-2"/><path d="M5 13h6"/></svg>
@@ -605,7 +648,7 @@ function renderChart() {
   }).filter(Boolean);
 
   // Pareto frontier line
-  const frontierModels = ['kimi-k2.5', 'gemini-3-flash', 'gpt-5.3-codex', 'claude-opus-4-6'];
+  const frontierModels = ['kimi-k2.5', 'gemini-3-flash', 'gpt-5.3-codex', 'gpt-5.4', 'claude-opus-4-6'];
   const frontierPts = frontierModels.map(m => {
     const entries = fdata.filter(d => d.model === m);
     if (!entries.length) return null;
