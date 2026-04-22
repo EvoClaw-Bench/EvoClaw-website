@@ -291,8 +291,11 @@ function renderChart() {
   const xMin = Math.min(...allX), xMax = Math.max(...allX);
   const yMin = Math.min(...allY), yMax = Math.max(...allY);
   const xPad = (xMax - xMin) * 0.15, xPadR = (xMax - xMin) * 0.25, yPad = (yMax - yMin) * 0.15;
-  const iconX = (xMax - xMin + 2*xPad) * 0.025 * 0.9;
-  const iconY = (yMax - yMin + 2*yPad) * 0.055 * 0.9;
+  // PILL_SCALE shrinks every capsule (pill + org/agent icons + vertical gap)
+  // uniformly. Bump up/down to tune overall density of the scatter chart.
+  const PILL_SCALE = 0.8;
+  const iconX = (xMax - xMin + 2*xPad) * 0.025 * 0.9 * PILL_SCALE;
+  const iconY = (yMax - yMin + 2*yPad) * 0.055 * 0.9 * PILL_SCALE;
 
   const traces = orgs.map(org => {
     const pts = fdata.filter(d => d.org === org.key);
@@ -386,7 +389,11 @@ function renderChart() {
     const orgK = ORG_KEY[d.org];
     const agentK = AGENT_KEY[d.agent];
     let pillColor;
-    if (d.agent === 'openhands') {
+    if (d.org === 'Z.ai') {
+      // Dedicated near-black pill so GLM (Claude Code + Z.ai) doesn't blend
+      // with the other CC rows and stays visually distinct from Kimi K2.5.
+      pillColor = isLight() ? 'rgba(20,20,28,0.14)' : 'rgba(10,10,14,0.55)';
+    } else if (d.agent === 'openhands') {
       const oc = (isLight() && d.org_color === '#FFFFFF') ? '#333344' : d.org_color;
       pillColor = hexToRgba(oc, 0.25);
     } else {
