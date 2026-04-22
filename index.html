@@ -37,9 +37,12 @@ body{background:var(--bg-0);color:var(--text-1);font-family:'Inter',system-ui,-a
 .hero-title .sep{color:var(--text-3);font-weight:400;margin:0 .15em}
 .hero-title .desc{color:var(--text-2);font-weight:400;font-size:.85em}
 .hero-desc{color:var(--text-3);font-size:.9rem;margin:0 0 1.25rem;line-height:1.7}
-.news-banner{display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;border-radius:8px;border:1px solid rgba(16,163,127,.25);background:rgba(16,163,127,.06);font-size:.85rem;color:var(--text-2);line-height:1.5}
+/* Per-banner accent set via inline --accent so each NEW row can use the
+ * achieving model's family color (Anthropic orange for Claude wins,
+ * Z.ai blue for GLM, OpenAI green for GPT, etc.). */
+.news-banner{display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;border-radius:8px;border:1px solid color-mix(in srgb, var(--accent, #10A37F) 28%, transparent);background:color-mix(in srgb, var(--accent, #10A37F) 8%, transparent);font-size:.85rem;color:var(--text-2);line-height:1.5}
 .news-stack{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.25rem}
-.news-tag{flex-shrink:0;padding:.1rem .45rem;border-radius:4px;background:#10A37F;color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.04em}
+.news-tag{flex-shrink:0;padding:.1rem .45rem;border-radius:4px;background:var(--accent, #10A37F);color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.04em}
 .news-text strong{color:var(--text-1)}
 .nav-btns{display:flex;gap:.6rem;justify-content:flex-start;flex-wrap:wrap}
 .nav-btn{display:inline-flex;align-items:center;gap:.45rem;
@@ -167,11 +170,11 @@ footer a:hover{color:var(--accent)}
     <img class="title-icon" src="evoclaw_icon.png" alt=""><span class="brand">EvoClaw</span><span class="sep">:</span><span class="desc">Evaluating AI Agents on Continuous Software Evolution</span>
   </h1>
   <div class="news-stack">
-    <div class="news-banner">
+    <div class="news-banner" style="--accent:#D97757">
       <span class="news-tag">NEW</span>
       <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K &amp; 1M context) achieves new SOTA at <strong>39.83%</strong>.</span>
     </div>
-    <div class="news-banner">
+    <div class="news-banner" style="--accent:#4A90E2">
       <span class="news-tag">NEW</span>
       <span class="news-text"><strong>GLM-5.1</strong> is the best open-source model at <strong>28.77%</strong>.</span>
     </div>
