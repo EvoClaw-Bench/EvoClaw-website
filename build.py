@@ -510,7 +510,7 @@ footer a:hover{color:var(--accent)}
   </h1>
   <div class="news-banner">
     <span class="news-tag">NEW</span>
-    <span class="news-text"><strong>GPT-5.4</strong> (xhigh) achieves <strong>2nd place</strong> among all models at <strong>33.71%</strong> score.</span>
+    <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K &amp; 1M context) takes the <strong>top two spots</strong> at <strong>39.83%</strong> and <strong>37.39%</strong> score. <strong>GLM-5.1</strong> debuts with a <strong>16.16%</strong> resolve rate at just <strong>$39.42</strong>/repo.</span>
   </div>
   <p class="hero-desc">Long-running agents build customized software (a &ldquo;Claw&rdquo;) to interact with their environments. For practical use in complex, real-world tasks, these agents must fully and autonomously evolve this software in response to a continuous stream of end-user requirements. EvoClaw evaluates how well frontier LLM agents handle this continuous development, benchmarking them against real-world evolution itineraries from open-source repositories.</p>
   <nav class="nav-btns">
