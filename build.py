@@ -369,15 +369,20 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   --border:#262640;--text-1:#e2e8f0;--text-2:#94a3b8;--text-3:#64748b;
   --accent:#6366f1;--accent-light:#818cf8;
   /* Z.ai brand tint — dark-gray in light mode, near-white in dark mode.
-   * Used by both the NEW callout bar and the scatter-chart centre dot
-   * via CSS var (for callout) + JS resolver (for Plotly markers). */
+   * Used by the NEW callout, the scatter-chart centre dot, the scatter
+   * pill background, and the table org badge so every Z.ai surface
+   * flips tone together. `--zai-tag-text` is the text colour painted
+   * INSIDE the NEW tag (whose background is `--zai-accent`); it's the
+   * contrast colour of the accent so text stays legible in both modes. */
   --zai-accent:#CFD2D9;
+  --zai-tag-text:#1a1d2e;
 }
 [data-theme="light"]{
   --bg-0:#f7f8fc;--bg-1:#ffffff;--bg-2:#eef0f8;--bg-3:#e2e5f0;
   --border:#cfd4e2;--text-1:#1a1d2e;--text-2:#4a5068;--text-3:#7c839a;
   --accent:#5b5cf6;--accent-light:#4f46e5;
   --zai-accent:#4A4D5C;
+  --zai-tag-text:#ffffff;
 }
 body,.panel,.nav-btn,.table-wrap{transition:background-color .3s ease,border-color .3s ease}
 html{scroll-behavior:smooth}
@@ -399,7 +404,12 @@ body{background:var(--bg-0);color:var(--text-1);font-family:'Inter',system-ui,-a
  * Z.ai blue for GLM, OpenAI green for GPT, etc.). */
 .news-banner{display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;border-radius:8px;border:1px solid color-mix(in srgb, var(--accent, #10A37F) 28%, transparent);background:color-mix(in srgb, var(--accent, #10A37F) 8%, transparent);font-size:.85rem;color:var(--text-2);line-height:1.5}
 .news-stack{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.25rem}
-.news-tag{flex-shrink:0;padding:.1rem .45rem;border-radius:4px;background:var(--accent, #10A37F);color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.04em}
+.news-tag{flex-shrink:0;padding:.1rem .45rem;border-radius:4px;background:var(--accent, #10A37F);color:var(--tag-text, #fff);font-size:.65rem;font-weight:700;letter-spacing:.04em}
+/* Z.ai banner pulls both its accent AND the contrast-safe tag text
+ * from the themed CSS variables defined on :root / [data-theme="light"],
+ * so the NEW tag stays readable whether the accent is near-white
+ * (dark mode) or dark-gray (light mode). */
+.news-banner--zai{--accent:var(--zai-accent);--tag-text:var(--zai-tag-text)}
 .news-text strong{color:var(--text-1)}
 .nav-btns{display:flex;gap:.6rem;justify-content:flex-start;flex-wrap:wrap}
 .nav-btn{display:inline-flex;align-items:center;gap:.45rem;
@@ -531,7 +541,7 @@ footer a:hover{color:var(--accent)}
       <span class="news-tag">NEW</span>
       <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K &amp; 1M context) achieves new SOTA at <strong>39.83%</strong>.</span>
     </div>
-    <div class="news-banner" style="--accent:var(--zai-accent)">
+    <div class="news-banner news-banner--zai">
       <span class="news-tag">NEW</span>
       <span class="news-text"><strong>GLM-5.1</strong> is the best open-source model at <strong>28.77%</strong>.</span>
     </div>
@@ -779,9 +789,12 @@ function renderChart() {
     const agentK = AGENT_KEY[d.agent];
     let pillColor;
     if (d.org === 'Z.ai') {
-      // Dedicated near-black pill so GLM (Claude Code + Z.ai) doesn't blend
-      // with the other CC rows and stays visually distinct from Kimi K2.5.
-      pillColor = isLight() ? 'rgba(20,20,28,0.14)' : 'rgba(10,10,14,0.55)';
+      // Pill tint mirrors the themed --zai-accent: dark-tint on light canvas,
+      // light-tint on dark canvas. Keeps GLM's capsule in the same tonal
+      // family as its centre dot, NEW callout, and table badge.
+      pillColor = isLight()
+        ? 'rgba(74,77,92,0.14)'        // dark-gray accent @ 14% on light bg
+        : 'rgba(207,210,217,0.22)';    // near-white accent @ 22% on dark bg
     } else if (d.agent === 'openhands') {
       const oc = (isLight() && d.org_color === '#FFFFFF') ? '#333344' : d.org_color;
       pillColor = hexToRgba(oc, 0.25);
