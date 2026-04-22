@@ -25,7 +25,7 @@
 body,.panel,.nav-btn,.table-wrap{transition:background-color .3s ease,border-color .3s ease}
 html{scroll-behavior:smooth}
 body{background:var(--bg-0);color:var(--text-1);font-family:'Inter',system-ui,-apple-system,sans-serif;line-height:1.6;min-height:100vh}
-.container{max-width:1280px;margin:0 auto;padding:2.5rem 1.5rem}
+.container{max-width:1580px;margin:0 auto;padding:2.5rem 1.5rem}
 
 /* ── Header ────────────────────────────────────────────────── */
 .hero{text-align:left;padding:1.5rem 0 2.5rem}
@@ -328,13 +328,26 @@ function renderChart() {
     };
   }).filter(Boolean);
 
-  // Pareto frontier line
-  const frontierModels = ['kimi-k2.5', 'gemini-3-flash', 'gpt-5.3-codex', 'gpt-5.4', 'claude-opus-4-6'];
-  const frontierPts = frontierModels.map(m => {
-    const entries = fdata.filter(d => d.model === m);
-    if (!entries.length) return null;
-    return entries.reduce((best, d) => d.score > best.score ? d : best);
-  }).filter(Boolean).sort((a, b) => a.cost - b.cost);
+  // Pareto frontier line — computed dynamically from fdata rather than
+  // hardcoded. At each cost level from cheapest up, keep the entry if its
+  // score improves the running best. Within one model (e.g. both CC + OH
+  // versions of opus-4-6) we first pick the entry with the higher score.
+  const byModelBest = new Map();
+  for (const d of fdata) {
+    const prev = byModelBest.get(d.model);
+    if (!prev || d.score > prev.score) byModelBest.set(d.model, d);
+  }
+  const frontierPts = [];
+  {
+    const sorted = [...byModelBest.values()].sort((a, b) => a.cost - b.cost);
+    let bestScore = -Infinity;
+    for (const p of sorted) {
+      if (p.score > bestScore) {
+        frontierPts.push(p);
+        bestScore = p.score;
+      }
+    }
+  }
   if (frontierPts.length > 1) {
     traces.push({
       x: frontierPts.map(p => p.cost),
