@@ -25,6 +25,7 @@ AGENT_MODEL_DISPLAY = {
     ("claude-code", "claude-opus-4-6"): "CC Opus 4.6",
     ("claude-code", "claude-opus-4-7"): "CC Opus 4.7 xhigh",
     ("claude-code", "claude-opus-4-7[1m]"): "CC Opus 4.7 xhigh 1M",
+    ("claude-code", "glm-5"): "CC GLM-5",
     ("claude-code", "glm-5.1"): "CC GLM-5.1",
     ("codex", "gpt-5.2-codex"): "Codex GPT-5.2C",
     ("codex", "gpt-5.2"): "Codex GPT-5.2",
@@ -39,7 +40,7 @@ AGENT_MODEL_DISPLAY = {
 
 AGENT_MODEL_ORDER = [
     "CC Sonnet 4.5", "CC Opus 4.5", "CC Sonnet 4.6", "CC Opus 4.6",
-    "CC Opus 4.7 xhigh", "CC Opus 4.7 xhigh 1M", "CC GLM-5.1",
+    "CC Opus 4.7 xhigh", "CC Opus 4.7 xhigh 1M", "CC GLM-5", "CC GLM-5.1",
     "Codex GPT-5.2C", "Codex GPT-5.2", "Codex GPT-5.3C", "Codex GPT-5.4",
     "Gemini Pro", "Gemini 3.1 Pro", "Gemini Flash",
 ]
@@ -72,7 +73,7 @@ AGENT_GROUPS = [
     ("claude-code", [
         "claude-sonnet-4-5-20250929", "claude-opus-4-5-20251101",
         "claude-sonnet-4-6", "claude-opus-4-6",
-        "claude-opus-4-7", "claude-opus-4-7[1m]", "glm-5.1",
+        "claude-opus-4-7", "claude-opus-4-7[1m]", "glm-5", "glm-5.1",
     ]),
     ("codex", ["gpt-5.2-codex", "gpt-5.2", "gpt-5.3-codex", "gpt-5.4"]),
     ("gemini-cli", ["gemini-3-pro", "gemini-3.1-pro", "gemini-3-flash"]),
@@ -90,6 +91,7 @@ MODEL_DISPLAY = {
     "claude-opus-4-6": "Claude Opus 4.6",
     "claude-opus-4-7": "Claude Opus 4.7 xhigh",
     "claude-opus-4-7[1m]": "Claude Opus 4.7 xhigh 1M",
+    "glm-5": "GLM-5",
     "glm-5.1": "GLM-5.1",
     "gpt-5.2-codex": "GPT 5.2 Codex",
     "gpt-5.2": "GPT 5.2",
@@ -114,6 +116,7 @@ MODEL_ORG = {
     "claude-opus-4-6": "Anthropic",
     "claude-opus-4-7": "Anthropic",
     "claude-opus-4-7[1m]": "Anthropic",
+    "glm-5": "Z.ai",
     "glm-5.1": "Z.ai",
     "gpt-5.2-codex": "OpenAI",
     "gpt-5.2": "OpenAI",
@@ -134,6 +137,7 @@ CHART_LABELS = {
     ("claude-code", "claude-opus-4-6"): "Claude Opus 4.6",
     ("claude-code", "claude-opus-4-7"): "Claude Opus 4.7 xhigh",
     ("claude-code", "claude-opus-4-7[1m]"): "Claude Opus 4.7 xhigh 1M",
+    ("claude-code", "glm-5"): "GLM-5",
     ("claude-code", "glm-5.1"): "GLM-5.1",
     ("codex", "gpt-5.2-codex"): "GPT-5.2-Codex",
     ("codex", "gpt-5.2"): "GPT-5.2",
@@ -171,7 +175,9 @@ ENTRY_COLORS = {
     ("claude-code", "claude-opus-4-7[1m]"): "#D07A5E",
     # GLM / Z.ai: use the light-mode color as the default; the scatter
     # renderer overrides to a lighter gray when dark theme is active so the
-    # centre dot stays visible on the dark canvas.
+    # centre dot stays visible on the dark canvas. Same fallback for both
+    # GLM variants — the dot resolver in JS pulls the themed --zai-accent.
+    ("claude-code", "glm-5"):   "#4A4D5C",
     ("claude-code", "glm-5.1"): "#4A4D5C",
     ("codex", "gpt-5.2-codex"): "#90C890",
     ("codex", "gpt-5.2"): "#90C890",
