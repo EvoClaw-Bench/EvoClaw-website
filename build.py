@@ -517,7 +517,7 @@ footer a:hover{color:var(--accent)}
       <span class="news-tag">NEW</span>
       <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K &amp; 1M context) achieves new SOTA at <strong>39.83%</strong>.</span>
     </div>
-    <div class="news-banner" style="--accent:#4A90E2">
+    <div class="news-banner" style="--accent:#4A4D5C">
       <span class="news-tag">NEW</span>
       <span class="news-text"><strong>GLM-5.1</strong> is the best open-source model at <strong>28.77%</strong>.</span>
     </div>
