@@ -380,7 +380,8 @@ body{background:var(--bg-0);color:var(--text-1);font-family:'Inter',system-ui,-a
 .hero-title .sep{color:var(--text-3);font-weight:400;margin:0 .15em}
 .hero-title .desc{color:var(--text-2);font-weight:400;font-size:.85em}
 .hero-desc{color:var(--text-3);font-size:.9rem;margin:0 0 1.25rem;line-height:1.7}
-.news-banner{display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;margin-bottom:1.25rem;border-radius:8px;border:1px solid rgba(16,163,127,.25);background:rgba(16,163,127,.06);font-size:.85rem;color:var(--text-2);line-height:1.5}
+.news-banner{display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;border-radius:8px;border:1px solid rgba(16,163,127,.25);background:rgba(16,163,127,.06);font-size:.85rem;color:var(--text-2);line-height:1.5}
+.news-stack{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.25rem}
 .news-tag{flex-shrink:0;padding:.1rem .45rem;border-radius:4px;background:#10A37F;color:#fff;font-size:.65rem;font-weight:700;letter-spacing:.04em}
 .news-text strong{color:var(--text-1)}
 .nav-btns{display:flex;gap:.6rem;justify-content:flex-start;flex-wrap:wrap}
@@ -508,9 +509,15 @@ footer a:hover{color:var(--accent)}
   <h1 class="hero-title">
     <img class="title-icon" src="evoclaw_icon.png" alt=""><span class="brand">EvoClaw</span><span class="sep">:</span><span class="desc">Evaluating AI Agents on Continuous Software Evolution</span>
   </h1>
-  <div class="news-banner">
-    <span class="news-tag">NEW</span>
-    <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K &amp; 1M context) takes the <strong>top two spots</strong> at <strong>39.83%</strong> and <strong>37.39%</strong> score. <strong>GLM-5.1</strong> debuts with a <strong>16.16%</strong> resolve rate at just <strong>$39.42</strong>/repo.</span>
+  <div class="news-stack">
+    <div class="news-banner">
+      <span class="news-tag">NEW</span>
+      <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K &amp; 1M context) achieves new SOTA at <strong>39.83%</strong>.</span>
+    </div>
+    <div class="news-banner">
+      <span class="news-tag">NEW</span>
+      <span class="news-text"><strong>GLM-5.1</strong> is the best open-source model at <strong>28.76%</strong>.</span>
+    </div>
   </div>
   <p class="hero-desc">Long-running agents build customized software (a &ldquo;Claw&rdquo;) to interact with their environments. For practical use in complex, real-world tasks, these agents must fully and autonomously evolve this software in response to a continuous stream of end-user requirements. EvoClaw evaluates how well frontier LLM agents handle this continuous development, benchmarking them against real-world evolution itineraries from open-source repositories.</p>
   <nav class="nav-btns">
