@@ -169,7 +169,10 @@ ENTRY_COLORS = {
     ("claude-code", "claude-opus-4-6"): "#D07A5E",
     ("claude-code", "claude-opus-4-7"): "#D07A5E",
     ("claude-code", "claude-opus-4-7[1m]"): "#D07A5E",
-    ("claude-code", "glm-5.1"): "#4A90E2",
+    # GLM / Z.ai: use the light-mode color as the default; the scatter
+    # renderer overrides to a lighter gray when dark theme is active so the
+    # centre dot stays visible on the dark canvas.
+    ("claude-code", "glm-5.1"): "#4A4D5C",
     ("codex", "gpt-5.2-codex"): "#90C890",
     ("codex", "gpt-5.2"): "#90C890",
     ("codex", "gpt-5.3-codex"): "#90C890",
@@ -190,7 +193,9 @@ ORG_COLORS = {
     "Google": "#4285F4",
     "Moonshot AI": "#FFFFFF",
     "MiniMax": "#F03A5D",
-    "Z.ai": "#4A90E2",
+    # Z.ai flips tone with theme so GLM reads as dark-brand on light canvas
+    # and light-brand on dark canvas. CSS var resolves at render time.
+    "Z.ai": "var(--zai-accent)",
 }
 AGENT_COLORS = {
     "claude-code": {"bg": "rgba(217,119,87,0.15)", "fg": "#D97757"},
@@ -352,18 +357,27 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
-<script>(function(){var t=localStorage.getItem('evoclaw-theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.theme-btn').forEach(function(b){b.classList.toggle('active',b.dataset.themeVal==='light')})})}})()</script>
+<script>(function(){var t=localStorage.getItem('evoclaw-theme');if(t!=='dark'){document.documentElement.setAttribute('data-theme','light');document.addEventListener('DOMContentLoaded',function(){document.querySelectorAll('.theme-btn').forEach(function(b){b.classList.toggle('active',b.dataset.themeVal==='light')})})}})()</script>
 <style>
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
+  /* Dark theme variables live at the root so [data-theme="light"] only has
+   * to override what changes. Default is still written here, but the
+   * boot script applies data-theme="light" on first load unless the user
+   * previously picked dark — so the visible default is LIGHT mode. */
   --bg-0:#08080d;--bg-1:#0e0e16;--bg-2:#14141f;--bg-3:#1c1c2b;
   --border:#262640;--text-1:#e2e8f0;--text-2:#94a3b8;--text-3:#64748b;
   --accent:#6366f1;--accent-light:#818cf8;
+  /* Z.ai brand tint — dark-gray in light mode, near-white in dark mode.
+   * Used by both the NEW callout bar and the scatter-chart centre dot
+   * via CSS var (for callout) + JS resolver (for Plotly markers). */
+  --zai-accent:#CFD2D9;
 }
 [data-theme="light"]{
   --bg-0:#f7f8fc;--bg-1:#ffffff;--bg-2:#eef0f8;--bg-3:#e2e5f0;
   --border:#cfd4e2;--text-1:#1a1d2e;--text-2:#4a5068;--text-3:#7c839a;
   --accent:#5b5cf6;--accent-light:#4f46e5;
+  --zai-accent:#4A4D5C;
 }
 body,.panel,.nav-btn,.table-wrap{transition:background-color .3s ease,border-color .3s ease}
 html{scroll-behavior:smooth}
@@ -498,10 +512,10 @@ footer a:hover{color:var(--accent)}
 </head>
 <body>
 <div class="theme-toggle">
-  <button class="theme-btn active" data-theme-val="dark" onclick="setTheme('dark')" aria-label="Dark mode">
+  <button class="theme-btn" data-theme-val="dark" onclick="setTheme('dark')" aria-label="Dark mode">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13.9 8.6a6 6 0 01-6.5-6.5A6 6 0 108.6 13.9a6 6 0 005.3-5.3z"/></svg>
   </button>
-  <button class="theme-btn" data-theme-val="light" onclick="setTheme('light')" aria-label="Light mode">
+  <button class="theme-btn active" data-theme-val="light" onclick="setTheme('light')" aria-label="Light mode">
     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.41 1.41M11.54 11.54l1.41 1.41M3.05 12.95l1.41-1.41M11.54 4.46l1.41-1.41"/></svg>
   </button>
 </div>
@@ -517,7 +531,7 @@ footer a:hover{color:var(--accent)}
       <span class="news-tag">NEW</span>
       <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K &amp; 1M context) achieves new SOTA at <strong>39.83%</strong>.</span>
     </div>
-    <div class="news-banner" style="--accent:#4A4D5C">
+    <div class="news-banner" style="--accent:var(--zai-accent)">
       <span class="news-tag">NEW</span>
       <span class="news-text"><strong>GLM-5.1</strong> is the best open-source model at <strong>28.77%</strong>.</span>
     </div>
@@ -715,13 +729,22 @@ function renderChart() {
 
   const frontierSet = new Set(frontierPts.map(p => p.agent + '|' + p.model));
 
+  // Read the live value of --zai-accent (themed) once per render so the GLM
+  // centre dot switches tone alongside the NEW callout: dark-gray on light
+  // canvas, near-white on dark canvas. Anything that resolves to empty
+  // (unset var, old browsers) falls back to the static ENTRY_COLORS value.
+  const zaiAccent = getComputedStyle(document.documentElement)
+    .getPropertyValue('--zai-accent').trim();
+  const dotColor = d =>
+    d.org === 'Z.ai' && zaiAccent ? zaiAccent : d.color;
+
   // Center dots: purple for frontier, entry color for others
   traces.push({
     x: fdata.map(d => d.cost),
     y: fdata.map(d => d.score),
     mode: 'markers',
     type: 'scatter',
-    marker: { size: 5, color: fdata.map(d => frontierSet.has(d.agent + '|' + d.model) ? '#a78bfa' : d.color) },
+    marker: { size: 5, color: fdata.map(d => frontierSet.has(d.agent + '|' + d.model) ? '#a78bfa' : dotColor(d)) },
     hoverinfo: 'skip',
     showlegend: false,
   });
