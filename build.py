@@ -911,12 +911,12 @@ function renderChart() {
   const POS_MAP = {
     'middle right':  ['left',   'middle',  18,   0],
     'middle left':   ['right',  'middle', -18,   0],
-    'top center':    ['center', 'bottom',   0,  32],
-    'top right':     ['left',   'bottom',  14,  28],
-    'top left':      ['right',  'bottom', -14,  28],
-    'bottom center': ['center', 'top',      0, -32],
-    'bottom right':  ['left',   'top',     14, -28],
-    'bottom left':   ['right',  'top',    -14, -28],
+    'top center':    ['center', 'bottom',   0,  26],
+    'top right':     ['left',   'bottom',  14,  22],
+    'top left':      ['right',  'bottom', -14,  22],
+    'bottom center': ['center', 'top',      0, -26],
+    'bottom right':  ['left',   'top',     14, -22],
+    'bottom left':   ['right',  'top',    -14, -22],
     'middle center': ['center', 'middle',   0,   0],
   };
   const annotations = fdata.map(d => {
