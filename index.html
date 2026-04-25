@@ -32,8 +32,12 @@
    * mechanism as --zai-accent: the centre dot, pill background, and
    * org badge all read this var so Kimi entries track tone with the
    * canvas. Light-mode value is the dark side (charcoal) so it stays
-   * visible on a white background; dark-mode value is moonlit silver. */
+   * visible on a white background; dark-mode value is moonlit silver.
+   * --moonshot-tag-text mirrors --zai-tag-text: contrast colour for
+   * text painted INSIDE the NEW tag (which uses --moonshot-accent as
+   * background). */
   --moonshot-accent:#C8CBD3;
+  --moonshot-tag-text:#1a1d2e;
 }
 [data-theme="light"]{
   --bg-0:#f7f8fc;--bg-1:#ffffff;--bg-2:#eef0f8;--bg-3:#e2e5f0;
@@ -42,6 +46,7 @@
   --zai-accent:#4A4D5C;
   --zai-tag-text:#ffffff;
   --moonshot-accent:#5C5F6B;
+  --moonshot-tag-text:#ffffff;
 }
 body,.panel,.nav-btn,.table-wrap{transition:background-color .3s ease,border-color .3s ease}
 html{scroll-behavior:smooth}
@@ -69,6 +74,7 @@ body{background:var(--bg-0);color:var(--text-1);font-family:'Inter',system-ui,-a
  * so the NEW tag stays readable whether the accent is near-white
  * (dark mode) or dark-gray (light mode). */
 .news-banner--zai{--accent:var(--zai-accent);--tag-text:var(--zai-tag-text)}
+.news-banner--moonshot{--accent:var(--moonshot-accent);--tag-text:var(--moonshot-tag-text)}
 .news-text strong{color:var(--text-1)}
 .nav-btns{display:flex;gap:.6rem;justify-content:flex-start;flex-wrap:wrap}
 .nav-btn{display:inline-flex;align-items:center;gap:.45rem;
@@ -198,11 +204,19 @@ footer a:hover{color:var(--accent)}
   <div class="news-stack">
     <div class="news-banner" style="--accent:#D97757">
       <span class="news-tag">NEW</span>
-      <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K &amp; 1M context) achieves new SOTA at <strong>39.83%</strong>.</span>
+      <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K &amp; 1M context) leads the overall leaderboard at <strong>39.81%</strong>.</span>
+    </div>
+    <div class="news-banner" style="--accent:#10A37F">
+      <span class="news-tag">NEW</span>
+      <span class="news-text"><strong>GPT-5.5</strong> (Codex) takes the #2 official spot at <strong>37.77%</strong>.</span>
+    </div>
+    <div class="news-banner news-banner--moonshot">
+      <span class="news-tag">NEW</span>
+      <span class="news-text"><strong>Kimi K2.6</strong> is the best open-source model at <strong>34.69%</strong>.</span>
     </div>
     <div class="news-banner news-banner--zai">
       <span class="news-tag">NEW</span>
-      <span class="news-text"><strong>GLM-5.1</strong> is the best open-source model at <strong>28.77%</strong>.</span>
+      <span class="news-text"><strong>GLM-5.1</strong> ranks #2 open-source at <strong>28.77%</strong>.</span>
     </div>
   </div>
   <p class="hero-desc">Long-running agents build customized software (a &ldquo;Claw&rdquo;) to interact with their environments. For practical use in complex, real-world tasks, these agents must fully and autonomously evolve this software in response to a continuous stream of end-user requirements. EvoClaw evaluates how well frontier LLM agents handle this continuous development, benchmarking them against real-world evolution itineraries from open-source repositories.</p>
