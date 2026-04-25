@@ -592,15 +592,20 @@ function renderChart() {
     let pos = d.chart_textpos || 'middle right';
     // CC GLM-5 sits below its pill in the full view to dodge the dense
     // adjacent CC cluster; once OH entries are filtered out the room
-    // re-opens, so push the label back to middle-left where it reads
+    // re-opens, so push the label to middle-right where it reads
     // naturally.
     if (officialOnly && d.agent === 'claude-code' && d.model === 'glm-5') {
-      pos = 'middle left';
+      pos = 'middle right';
     }
     const [xanchor, yanchor, xshift, yshift] = POS_MAP[pos] || POS_MAP['middle right'];
     const onFrontier = frontierSet.has(d.agent + '|' + d.model);
-    const tier = TIER[tierOf(d)];
-    const label = onFrontier
+    const tierKey = tierOf(d);
+    const tier = TIER[tierKey];
+    // Bold the model name on both frontier (purple, full size) and near-
+    // frontier tiers so they pop against the muted off-tier labels — the
+    // colour + size still distinguish on from near visually.
+    const boldName = onFrontier || tierKey === 'near';
+    const label = boldName
       ? '<b>' + d.chart_label + '</b><br>(' + d.agent_display + ')'
       : d.chart_label + '<br>(' + d.agent_display + ')';
     // Align text inside the annotation block: anchor right → right-align, etc.
