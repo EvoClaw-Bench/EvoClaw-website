@@ -187,7 +187,10 @@ ENTRY_COLORS = {
     ("gemini-cli", "gemini-3.1-pro"): "#7AAED8",
     ("gemini-cli", "gemini-3-flash"): "#7AAED8",
     ("openhands", "minimax-m2.5"): "#E06070",
-    ("openhands", "kimi-k2.5"): "#D4A050",
+    # Moonshot/Kimi: themed silver — JS dot resolver pulls --moonshot-accent
+    # at render time, so the centre dot tracks light/dark theme. The static
+    # value here is the light-mode fallback for non-JS contexts.
+    ("openhands", "kimi-k2.5"): "#5C5F6B",
     ("openhands", "gemini-3-flash"): "#7AAED8",
     ("openhands", "gpt-5.3-codex"): "#90C890",
     ("openhands", "claude-opus-4-6"): "#D07A5E",
@@ -197,7 +200,9 @@ ORG_COLORS = {
     "Anthropic": "#D97757",
     "OpenAI": "#10A37F",
     "Google": "#4285F4",
-    "Moonshot AI": "#FFFFFF",
+    # Moonshot AI: cool moonlight silver — flips tone with theme alongside
+    # Z.ai, so the table org badge stays legible in both light and dark.
+    "Moonshot AI": "var(--moonshot-accent)",
     "MiniMax": "#F03A5D",
     # Z.ai flips tone with theme so GLM reads as dark-brand on light canvas
     # and light-brand on dark canvas. CSS var resolves at render time.
@@ -382,6 +387,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
    * contrast colour of the accent so text stays legible in both modes. */
   --zai-accent:#CFD2D9;
   --zai-tag-text:#1a1d2e;
+  /* Moonshot AI brand tint — cool moonlight silver. Same theme-flip
+   * mechanism as --zai-accent: the centre dot, pill background, and
+   * org badge all read this var so Kimi entries track tone with the
+   * canvas. Light-mode value is the dark side (charcoal) so it stays
+   * visible on a white background; dark-mode value is moonlit silver. */
+  --moonshot-accent:#C8CBD3;
 }
 [data-theme="light"]{
   --bg-0:#f7f8fc;--bg-1:#ffffff;--bg-2:#eef0f8;--bg-3:#e2e5f0;
@@ -389,6 +400,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
   --accent:#5b5cf6;--accent-light:#4f46e5;
   --zai-accent:#4A4D5C;
   --zai-tag-text:#ffffff;
+  --moonshot-accent:#5C5F6B;
 }
 body,.panel,.nav-btn,.table-wrap{transition:background-color .3s ease,border-color .3s ease}
 html{scroll-behavior:smooth}
@@ -653,7 +665,7 @@ const orgs = [
   { key: 'Anthropic',   color: '#D97757' },
   { key: 'OpenAI',      color: '#10A37F' },
   { key: 'Google',      color: '#4285F4' },
-  { key: 'Moonshot AI', color: '#FFFFFF' },
+  { key: 'Moonshot AI', color: 'var(--moonshot-accent)' },
   { key: 'MiniMax',     color: '#F03A5D' },
   { key: 'Z.ai',        color: '#4A90E2' },
 ];
@@ -745,14 +757,19 @@ function renderChart() {
 
   const frontierSet = new Set(frontierPts.map(p => p.agent + '|' + p.model));
 
-  // Read the live value of --zai-accent (themed) once per render so the GLM
-  // centre dot switches tone alongside the NEW callout: dark-gray on light
-  // canvas, near-white on dark canvas. Anything that resolves to empty
-  // (unset var, old browsers) falls back to the static ENTRY_COLORS value.
+  // Read live themed accent vars once per render so brand-themed centre
+  // dots track light/dark canvas. Each org with a CSS-var-backed accent
+  // (Z.ai, Moonshot AI) gets its own lookup; anything else falls back to
+  // the static ENTRY_COLORS value via d.color.
   const zaiAccent = getComputedStyle(document.documentElement)
     .getPropertyValue('--zai-accent').trim();
-  const dotColor = d =>
-    d.org === 'Z.ai' && zaiAccent ? zaiAccent : d.color;
+  const moonshotAccent = getComputedStyle(document.documentElement)
+    .getPropertyValue('--moonshot-accent').trim();
+  const dotColor = d => {
+    if (d.org === 'Z.ai' && zaiAccent) return zaiAccent;
+    if (d.org === 'Moonshot AI' && moonshotAccent) return moonshotAccent;
+    return d.color;
+  };
 
   // Center dots: purple for frontier, entry color for others
   traces.push({
@@ -801,9 +818,14 @@ function renderChart() {
       pillColor = isLight()
         ? 'rgba(74,77,92,0.14)'        // dark-gray accent @ 14% on light bg
         : 'rgba(207,210,217,0.22)';    // near-white accent @ 22% on dark bg
+    } else if (d.org === 'Moonshot AI') {
+      // Mirror the --moonshot-accent flip so Kimi pills track theme alongside
+      // GLM. Charcoal-tint on light, silver-tint on dark.
+      pillColor = isLight()
+        ? 'rgba(92,95,107,0.14)'       // moonshot accent (light) @ 14%
+        : 'rgba(200,203,211,0.22)';    // moonshot accent (dark) @ 22%
     } else if (d.agent === 'openhands') {
-      const oc = (isLight() && d.org_color === '#FFFFFF') ? '#333344' : d.org_color;
-      pillColor = hexToRgba(oc, 0.25);
+      pillColor = hexToRgba(d.org_color, 0.25);
     } else {
       pillColor = AGENT_PILL[d.agent] || 'rgba(128,128,128,0.15)';
     }
