@@ -131,8 +131,9 @@ tr:hover td{background:rgba(99,102,241,.04)}
 .score-bar{position:absolute;right:0;top:4px;bottom:4px;border-radius:4px;opacity:.18;z-index:0}
 .score-val{position:relative;z-index:1;font-weight:600}
 .best-val{color:var(--accent-light);font-weight:700}
-.second-val{color:color-mix(in srgb, var(--accent-light) 60%, transparent);font-weight:600}
+.second-val{color:color-mix(in srgb, var(--accent-light) 90%, transparent);font-weight:600}
 .worst-val{color:#c44e52;font-weight:600}
+.score-val:not(.best-val):not(.second-val):not(.worst-val){color:color-mix(in srgb, var(--text-1) 90%, transparent)}
 [data-theme="light"] .worst-val{color:#a8324a}
 .leaderboard-header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
 .leaderboard-legend{display:flex;align-items:center;gap:1rem;font-size:.78rem;color:var(--text-3)}
