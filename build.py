@@ -512,9 +512,9 @@ tr:hover td{background:rgba(99,102,241,.04)}
 .score-bar{position:absolute;right:0;top:4px;bottom:4px;border-radius:4px;opacity:.18;z-index:0}
 .score-val{position:relative;z-index:1;font-weight:600}
 .best-val{color:var(--accent-light);font-weight:700}
-.second-val{color:#5eead4;font-weight:600}
+.second-val{color:#7dd3fc;font-weight:600}
 .worst-val{color:#c44e52;font-weight:600}
-[data-theme="light"] .second-val{color:#0d9488}
+[data-theme="light"] .second-val{color:#0284c7}
 [data-theme="light"] .worst-val{color:#a8324a}
 
 /* top-3 row accents */
@@ -999,7 +999,7 @@ function renderChart() {
     const baseColor = onFrontier ? (isLight() ? '#6d28d9' : '#c4b5fd') : tc.text2;
     const labelColor = tier.labelAlpha === 1.0
       ? baseColor
-      : (isLight() ? `rgba(74,80,104,${tier.labelAlpha})` : `rgba(148,163,184,${tier.labelAlpha})`);
+      : hexToRgba(baseColor, tier.labelAlpha);
     return {
       x: d.cost, y: d.score, xref: 'x', yref: 'y',
       text: label,
@@ -1056,36 +1056,45 @@ function renderChart() {
   const BASE_XSHIFT = 18;
   let scaling = false;
 
-  // Hover highlight — boost the hovered point's label to opaque + bold
-  // so it stands out from off-tier neighbours. Restore on unhover.
-  // Annotations are positional (annotations[i] ↔ fdata[i]); we look up
-  // the index from customdata[8] = "agent|model".
+  // Hover highlight — only modify the colour's alpha channel: a faded
+  // off-tier label becomes opaque on hover, while on/near labels (already
+  // at full alpha) don't change visually. Weight, size, and text stay put.
+  // Defensive: restore the previous hover before applying a new one in
+  // case plotly_unhover doesn't fire between adjacent point hovers.
   const annKeyMap = new Map();
   fdata.forEach((d, i) => annKeyMap.set(d.agent + '|' + d.model, i));
   let hoverAnnIdx = -1;
+  function applyHoverBoost(idx) {
+    const a = annotations[idx];
+    // Only rgba(...) colours have an alpha to bump. Hex colours (used by
+    // on/near tiers) are already fully opaque — no-op.
+    const m = /^rgba\(([^)]+?),\s*([\d.]+)\)$/.exec(a.font.color);
+    if (!m || parseFloat(m[2]) >= 0.99) return;
+    Plotly.relayout(chartEl, {
+      [`annotations[${idx}].font.color`]: `rgba(${m[1]},1)`,
+    });
+  }
+  function restoreHoverBoost(idx) {
+    const a = annotations[idx];
+    Plotly.relayout(chartEl, {
+      [`annotations[${idx}].font.color`]: a.font.color,
+    });
+  }
   chartEl.on('plotly_hover', function(ev) {
     if (!ev || !ev.points || !ev.points.length) return;
     const pt = ev.points[0];
     if (!pt.data || !pt.data.customdata) return;
     const key = pt.customdata[8];
     if (!key || !annKeyMap.has(key)) return;
-    hoverAnnIdx = annKeyMap.get(key);
-    const d = fdata[hoverAnnIdx];
-    Plotly.relayout(chartEl, {
-      [`annotations[${hoverAnnIdx}].text`]:
-        '<b>' + d.chart_label + '</b><br>(' + d.agent_display + ')',
-      [`annotations[${hoverAnnIdx}].font.color`]: tc.text,
-      [`annotations[${hoverAnnIdx}].font.size`]: 14,
-    });
+    const newIdx = annKeyMap.get(key);
+    if (newIdx === hoverAnnIdx) return;
+    if (hoverAnnIdx >= 0) restoreHoverBoost(hoverAnnIdx);
+    hoverAnnIdx = newIdx;
+    applyHoverBoost(hoverAnnIdx);
   });
   chartEl.on('plotly_unhover', function() {
     if (hoverAnnIdx < 0) return;
-    const a = annotations[hoverAnnIdx];
-    Plotly.relayout(chartEl, {
-      [`annotations[${hoverAnnIdx}].text`]: a.text,
-      [`annotations[${hoverAnnIdx}].font.color`]: a.font.color,
-      [`annotations[${hoverAnnIdx}].font.size`]: a.font.size,
-    });
+    restoreHoverBoost(hoverAnnIdx);
     hoverAnnIdx = -1;
   });
 
