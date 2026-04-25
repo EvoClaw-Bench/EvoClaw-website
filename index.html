@@ -131,6 +131,8 @@ tr:hover td{background:rgba(99,102,241,.04)}
 .score-bar{position:absolute;right:0;top:4px;bottom:4px;border-radius:4px;opacity:.18;z-index:0}
 .score-val{position:relative;z-index:1;font-weight:600}
 .best-val{color:var(--accent-light);font-weight:700}
+.worst-val{color:#c44e52;font-weight:600}
+[data-theme="light"] .worst-val{color:#a8324a}
 
 /* top-3 row accents */
 tr.top-1 td{background:rgba(251,191,36,.04)}
@@ -631,6 +633,16 @@ function isBest(val, key, fdata) {
   if (LOWER.has(key))  return Math.abs(val - Math.min(...fdata.map(d => d[key]))) < 0.005;
   return false;
 }
+function isWorst(val, key, fdata) {
+  if (HIGHER.has(key)) return Math.abs(val - Math.min(...fdata.map(d => d[key]))) < 0.005;
+  if (LOWER.has(key))  return Math.abs(val - Math.max(...fdata.map(d => d[key]))) < 0.005;
+  return false;
+}
+function valCls(val, key, fdata) {
+  if (isBest(val, key, fdata)) return ' best-val';
+  if (isWorst(val, key, fdata)) return ' worst-val';
+  return '';
+}
 function fmtNum(v, d) { return v.toFixed(d); }
 
 function orgIcon(d) {
@@ -665,8 +677,7 @@ function renderTable() {
 
   const maxScore = Math.max(...fdata.map(d => d.score));
   function numCell(v, k, dec) {
-    const cls = isBest(v, k, fdata) ? 'num best-val' : 'num';
-    return '<td class="' + cls + '">' + fmtNum(v, dec) + '</td>';
+    return '<td class="num' + valCls(v, k, fdata) + '">' + fmtNum(v, dec) + '</td>';
   }
 
   const sorted = [...ranked].sort((a, b) => {
@@ -691,14 +702,14 @@ function renderTable() {
       '<td class="rank-cell">' + medal + '</td>' +
       '<td class="model-cell">' + orgIcon(d) + d.model_display + '</td>' +
       '<td style="vertical-align:middle"><span class="agent-cell" style="' + (d.agent === 'openhands' ? 'gap:6.5px' : '') + '">' + agentIcon(d) + '<span class="agent-badge" style="background:' + _abg + ';color:' + _afg + '">' + d.agent_display + '</span></span></td>' +
-      '<td class="score-cell"><div class="score-bar" style="width:' + barW + '%;background:' + d.agent_fg + '"></div><span class="score-val' + (isBest(d.score,'score',fdata) ? ' best-val' : '') + '">' + fmtNum(d.score, 2) + '</span></td>' +
+      '<td class="score-cell"><div class="score-bar" style="width:' + barW + '%;background:' + d.agent_fg + '"></div><span class="score-val' + valCls(d.score,'score',fdata) + '">' + fmtNum(d.score, 2) + '</span></td>' +
       numCell(d.precision, 'precision', 2) +
       numCell(d.recall, 'recall', 2) +
       numCell(d.resolve, 'resolve', 2) +
       numCell(d.cost, 'cost', 2) +
-      '<td class="num' + (isBest(d.out_tok_k,'out_tok_k',fdata) ? ' best-val' : '') + '">' + d.out_tok_k.toLocaleString() + '</td>' +
+      '<td class="num' + valCls(d.out_tok_k,'out_tok_k',fdata) + '">' + d.out_tok_k.toLocaleString() + '</td>' +
       numCell(d.time_h, 'time_h', 2) +
-      '<td class="num' + (isBest(d.turns,'turns',fdata) ? ' best-val' : '') + '">' + d.turns.toLocaleString() + '</td>' +
+      '<td class="num' + valCls(d.turns,'turns',fdata) + '">' + d.turns.toLocaleString() + '</td>' +
     '</tr>';
   }).join('');
 }
