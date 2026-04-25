@@ -516,6 +516,10 @@ tr:hover td{background:rgba(99,102,241,.04)}
 .worst-val{color:#c44e52;font-weight:600}
 [data-theme="light"] .second-val{color:#0284c7}
 [data-theme="light"] .worst-val{color:#a8324a}
+.leaderboard-header{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}
+.leaderboard-legend{display:flex;align-items:center;gap:1rem;font-size:.78rem;color:var(--text-3)}
+.legend-item{display:inline-flex;align-items:center;gap:.3rem;white-space:nowrap}
+.legend-swatch{font-size:.85rem;line-height:1}
 
 /* top-3 row accents */
 tr.top-1 td{background:rgba(251,191,36,.04)}
@@ -636,7 +640,14 @@ footer a:hover{color:var(--accent)}
 
 <!-- ═══ Leaderboard ═══ -->
 <section class="panel" id="leaderboard">
-  <h2 class="panel-title">Leaderboard</h2>
+  <div class="leaderboard-header">
+    <h2 class="panel-title" style="margin-bottom:0">Leaderboard</h2>
+    <div class="leaderboard-legend" aria-label="Per-column highlight legend">
+      <span class="legend-item"><span class="legend-swatch best-val">●</span>Best</span>
+      <span class="legend-item"><span class="legend-swatch second-val">●</span>2nd</span>
+      <span class="legend-item"><span class="legend-swatch worst-val">●</span>Worst</span>
+    </div>
+  </div>
   <div class="table-wrap">
     <table>
       <thead>
@@ -738,8 +749,7 @@ function renderChart() {
       text: pts.map(() => ''),
       customdata: pts.map(p => [
         p.model_display, p.agent_display, p.precision, p.recall,
-        p.resolve, p.out_tok_k, p.time_h, p.turns,
-        p.agent + '|' + p.model,  // [8] hover-lookup key for annotation boost
+        p.resolve, p.out_tok_k, p.time_h, p.turns
       ]),
       mode: 'markers+text',
       type: 'scatter',
@@ -1055,48 +1065,6 @@ function renderChart() {
   const initYRange = yMax + yPad - (yMin - yPad);
   const BASE_XSHIFT = 18;
   let scaling = false;
-
-  // Hover highlight — only modify the colour's alpha channel: a faded
-  // off-tier label becomes opaque on hover, while on/near labels (already
-  // at full alpha) don't change visually. Weight, size, and text stay put.
-  // Defensive: restore the previous hover before applying a new one in
-  // case plotly_unhover doesn't fire between adjacent point hovers.
-  const annKeyMap = new Map();
-  fdata.forEach((d, i) => annKeyMap.set(d.agent + '|' + d.model, i));
-  let hoverAnnIdx = -1;
-  function applyHoverBoost(idx) {
-    const a = annotations[idx];
-    // Only rgba(...) colours have an alpha to bump. Hex colours (used by
-    // on/near tiers) are already fully opaque — no-op.
-    const m = /^rgba\(([^)]+?),\s*([\d.]+)\)$/.exec(a.font.color);
-    if (!m || parseFloat(m[2]) >= 0.99) return;
-    Plotly.relayout(chartEl, {
-      [`annotations[${idx}].font.color`]: `rgba(${m[1]},1)`,
-    });
-  }
-  function restoreHoverBoost(idx) {
-    const a = annotations[idx];
-    Plotly.relayout(chartEl, {
-      [`annotations[${idx}].font.color`]: a.font.color,
-    });
-  }
-  chartEl.on('plotly_hover', function(ev) {
-    if (!ev || !ev.points || !ev.points.length) return;
-    const pt = ev.points[0];
-    if (!pt.data || !pt.data.customdata) return;
-    const key = pt.customdata[8];
-    if (!key || !annKeyMap.has(key)) return;
-    const newIdx = annKeyMap.get(key);
-    if (newIdx === hoverAnnIdx) return;
-    if (hoverAnnIdx >= 0) restoreHoverBoost(hoverAnnIdx);
-    hoverAnnIdx = newIdx;
-    applyHoverBoost(hoverAnnIdx);
-  });
-  chartEl.on('plotly_unhover', function() {
-    if (hoverAnnIdx < 0) return;
-    restoreHoverBoost(hoverAnnIdx);
-    hoverAnnIdx = -1;
-  });
 
   chartEl.on('plotly_relayout', function(ev) {
     if (scaling) return;
