@@ -172,7 +172,6 @@ CHART_TEXT_POS = {
     ("claude-code", "glm-5"): "bottom center",
     ("codex", "gpt-5.2"): "middle left",
     ("codex", "gpt-5.3-codex"): "middle left",
-    ("codex", "gpt-5.5"): "middle left",
     ("gemini-cli", "gemini-3-flash"): "middle left",
     ("openhands", "minimax-m2.5"): "middle left",
     ("openhands", "kimi-k2.5"): "middle left",
@@ -792,6 +791,41 @@ function renderChart() {
   }
 
   const frontierSet = new Set(frontierPts.map(p => p.agent + '|' + p.model));
+  const isFrontier = d => frontierSet.has(d.agent + '|' + d.model);
+
+  // Three-tier visual hierarchy on the chart:
+  //   on   — Pareto-optimal, fully highlighted (purple, bold)
+  //   near — within NEAR_GAP_PP of the frontier at the same cost; rendered
+  //          at full opacity but in the entry's own brand colour, no purple
+  //   off  — dominated by more than NEAR_GAP_PP; faded so the eye skips them
+  // 3.6pp catches the obvious "competitive but not optimal" cluster
+  // (GPT-5.5, Opus 4.7 1M, GPT-5.4, GLM-5.1, Opus 4.6 CC, GLM-5);
+  // anything beyond is clearly dominated.
+  const NEAR_GAP_PP = 3.6;
+  function frontierScoreAt(cost) {
+    if (frontierPts.length === 0) return 0;
+    if (cost <= frontierPts[0].cost) return frontierPts[0].score;
+    for (let i = 1; i < frontierPts.length; i++) {
+      if (cost <= frontierPts[i].cost) {
+        const a = frontierPts[i-1], b = frontierPts[i];
+        const t = (cost - a.cost) / (b.cost - a.cost);
+        return a.score + t * (b.score - a.score);
+      }
+    }
+    return frontierPts[frontierPts.length-1].score;
+  }
+  const tierOf = d => {
+    if (isFrontier(d)) return 'on';
+    return (frontierScoreAt(d.cost) - d.score) < NEAR_GAP_PP ? 'near' : 'off';
+  };
+  // Per-tier visual params. dot size/opacity is direct; pillAlphaMult
+  // multiplies the pill's existing rgba alpha; iconOpacity drives the
+  // org/agent icon images; labelAlpha scales the annotation text colour.
+  const TIER = {
+    on:   { dotSize: 6, dotOpacity: 1.0,  pillAlphaMult: 1.0, iconOpacity: 1.0,  labelAlpha: 1.0 },
+    near: { dotSize: 5, dotOpacity: 1.0,  pillAlphaMult: 1.0, iconOpacity: 1.0,  labelAlpha: 1.0 },
+    off:  { dotSize: 4, dotOpacity: 0.45, pillAlphaMult: 0.5, iconOpacity: 0.45, labelAlpha: 0.55 },
+  };
 
   // Read live themed accent vars once per render so brand-themed centre
   // dots track light/dark canvas. Each org with a CSS-var-backed accent
@@ -807,13 +841,18 @@ function renderChart() {
     return d.color;
   };
 
-  // Center dots: purple for frontier, entry color for others
+  // Center dots — purple for frontier, brand colour otherwise; per-tier
+  // size & opacity arrays so dominated points fade into the background.
   traces.push({
     x: fdata.map(d => d.cost),
     y: fdata.map(d => d.score),
     mode: 'markers',
     type: 'scatter',
-    marker: { size: 5, color: fdata.map(d => frontierSet.has(d.agent + '|' + d.model) ? '#a78bfa' : dotColor(d)) },
+    marker: {
+      size:    fdata.map(d => TIER[tierOf(d)].dotSize),
+      color:   fdata.map(d => isFrontier(d) ? '#a78bfa' : dotColor(d)),
+      opacity: fdata.map(d => TIER[tierOf(d)].dotOpacity),
+    },
     hoverinfo: 'skip',
     showlegend: false,
   });
@@ -832,6 +871,12 @@ function renderChart() {
     const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
     return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
   }
+  // Multiply the alpha channel of an "rgba(r,g,b,a)" string by `mult`.
+  // Used to fade off-frontier pill backgrounds without rebuilding the
+  // colour from scratch.
+  function fadeRgba(rgba, mult) {
+    return rgba.replace(/[\d.]+\)$/, m => (parseFloat(m) * mult).toFixed(3) + ')');
+  }
 
   // Build pill SVG as data URI
   function pillSvg(color) {
@@ -846,6 +891,7 @@ function renderChart() {
   fdata.forEach(d => {
     const orgK = ORG_KEY[d.org];
     const agentK = AGENT_KEY[d.agent];
+    const tier = TIER[tierOf(d)];
     let pillColor;
     if (d.org === 'Z.ai') {
       // Pill tint mirrors the themed --zai-accent: dark-tint on light canvas,
@@ -865,6 +911,8 @@ function renderChart() {
     } else {
       pillColor = AGENT_PILL[d.agent] || 'rgba(128,128,128,0.15)';
     }
+    // Off-frontier pills get further dimmed so dominated entries recede.
+    if (tier.pillAlphaMult !== 1.0) pillColor = fadeRgba(pillColor, tier.pillAlphaMult);
 
     // Pill background (below icons)
     images.push({
@@ -885,6 +933,7 @@ function renderChart() {
         x: d.cost, y: d.score + vGap * 0.7,
         sizex: iconX, sizey: iconY,
         xanchor: 'center', yanchor: 'middle',
+        opacity: tier.iconOpacity,
         layer: 'above',
       });
     }
@@ -897,6 +946,7 @@ function renderChart() {
         x: d.cost, y: d.score - vGap * 0.7,
         sizex: iconX * agentScale, sizey: agentIconY * agentScale,
         xanchor: 'center', yanchor: 'middle',
+        opacity: tier.iconOpacity,
         layer: 'above',
       });
     }
@@ -930,18 +980,24 @@ function renderChart() {
     }
     const [xanchor, yanchor, xshift, yshift] = POS_MAP[pos] || POS_MAP['middle right'];
     const onFrontier = frontierSet.has(d.agent + '|' + d.model);
+    const tier = TIER[tierOf(d)];
     const label = onFrontier
       ? '<b>' + d.chart_label + '</b><br>(' + d.agent_display + ')'
       : d.chart_label + '<br>(' + d.agent_display + ')';
     // Align text inside the annotation block: anchor right → right-align, etc.
     const align = xanchor === 'right' ? 'right' : xanchor === 'center' ? 'center' : 'left';
+    // Off-frontier labels fade via rgba alpha so they recede with the pill.
+    const baseColor = onFrontier ? (isLight() ? '#6d28d9' : '#c4b5fd') : tc.text2;
+    const labelColor = tier.labelAlpha === 1.0
+      ? baseColor
+      : (isLight() ? `rgba(74,80,104,${tier.labelAlpha})` : `rgba(148,163,184,${tier.labelAlpha})`);
     return {
       x: d.cost, y: d.score, xref: 'x', yref: 'y',
       text: label,
       showarrow: false,
       xanchor, yanchor, align,
       xshift, yshift,
-      font: { size: onFrontier ? 14 : 13, color: onFrontier ? (isLight() ? '#6d28d9' : '#c4b5fd') : tc.text2, family: 'Inter, sans-serif' },
+      font: { size: onFrontier ? 14 : 13, color: labelColor, family: 'Inter, sans-serif' },
     };
   });
 
