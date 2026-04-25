@@ -131,7 +131,9 @@ tr:hover td{background:rgba(99,102,241,.04)}
 .score-bar{position:absolute;right:0;top:4px;bottom:4px;border-radius:4px;opacity:.18;z-index:0}
 .score-val{position:relative;z-index:1;font-weight:600}
 .best-val{color:var(--accent-light);font-weight:700}
+.second-val{color:#5eead4;font-weight:600}
 .worst-val{color:#c44e52;font-weight:600}
+[data-theme="light"] .second-val{color:#0d9488}
 [data-theme="light"] .worst-val{color:#a8324a}
 
 /* top-3 row accents */
@@ -731,20 +733,38 @@ function renderChart() {
 const HIGHER = new Set(['score','precision','recall','resolve']);
 const LOWER  = new Set(['cost','out_tok_k','time_h','turns']);
 
+// Per-column rank stats — pre-computed once per render so each cell's
+// classification is O(1). HIGHER metrics rank descending (max = best);
+// LOWER metrics rank ascending (min = best). Ties collapse via Set so
+// "second" is the second-distinct-value, not the second-row.
+function computeColStats(fdata) {
+  const stats = {};
+  const KEYS = [...HIGHER, ...LOWER];
+  for (const k of KEYS) {
+    const uniq = [...new Set(fdata.map(d => d[k]))]
+      .sort((a, b) => HIGHER.has(k) ? b - a : a - b);
+    stats[k] = {
+      best:   uniq[0],
+      second: uniq.length > 1 ? uniq[1] : null,
+      worst:  uniq[uniq.length - 1],
+    };
+  }
+  return stats;
+}
+function valCls(val, key, stats) {
+  const s = stats[key];
+  if (s == null) return '';
+  if (Math.abs(val - s.best) < 0.005) return ' best-val';
+  if (s.second != null && Math.abs(val - s.second) < 0.005) return ' second-val';
+  if (Math.abs(val - s.worst) < 0.005) return ' worst-val';
+  return '';
+}
+// Backwards-compatible isBest for the score-bar barW computation that
+// only cares about the leader.
 function isBest(val, key, fdata) {
   if (HIGHER.has(key)) return Math.abs(val - Math.max(...fdata.map(d => d[key]))) < 0.005;
   if (LOWER.has(key))  return Math.abs(val - Math.min(...fdata.map(d => d[key]))) < 0.005;
   return false;
-}
-function isWorst(val, key, fdata) {
-  if (HIGHER.has(key)) return Math.abs(val - Math.min(...fdata.map(d => d[key]))) < 0.005;
-  if (LOWER.has(key))  return Math.abs(val - Math.max(...fdata.map(d => d[key]))) < 0.005;
-  return false;
-}
-function valCls(val, key, fdata) {
-  if (isBest(val, key, fdata)) return ' best-val';
-  if (isWorst(val, key, fdata)) return ' worst-val';
-  return '';
 }
 function fmtNum(v, d) { return v.toFixed(d); }
 
@@ -779,8 +799,9 @@ function renderTable() {
   ranked.forEach((d, i) => d._rank = i + 1);
 
   const maxScore = Math.max(...fdata.map(d => d.score));
+  const colStats = computeColStats(fdata);
   function numCell(v, k, dec) {
-    return '<td class="num' + valCls(v, k, fdata) + '">' + fmtNum(v, dec) + '</td>';
+    return '<td class="num' + valCls(v, k, colStats) + '">' + fmtNum(v, dec) + '</td>';
   }
 
   const sorted = [...ranked].sort((a, b) => {
@@ -805,14 +826,14 @@ function renderTable() {
       '<td class="rank-cell">' + medal + '</td>' +
       '<td class="model-cell">' + orgIcon(d) + d.model_display + '</td>' +
       '<td style="vertical-align:middle"><span class="agent-cell" style="' + (d.agent === 'openhands' ? 'gap:6.5px' : '') + '">' + agentIcon(d) + '<span class="agent-badge" style="background:' + _abg + ';color:' + _afg + '">' + d.agent_display + '</span></span></td>' +
-      '<td class="score-cell"><div class="score-bar" style="width:' + barW + '%;background:' + d.agent_fg + '"></div><span class="score-val' + valCls(d.score,'score',fdata) + '">' + fmtNum(d.score, 2) + '</span></td>' +
+      '<td class="score-cell"><div class="score-bar" style="width:' + barW + '%;background:' + d.agent_fg + '"></div><span class="score-val' + valCls(d.score,'score',colStats) + '">' + fmtNum(d.score, 2) + '</span></td>' +
       numCell(d.precision, 'precision', 2) +
       numCell(d.recall, 'recall', 2) +
       numCell(d.resolve, 'resolve', 2) +
       numCell(d.cost, 'cost', 2) +
-      '<td class="num' + valCls(d.out_tok_k,'out_tok_k',fdata) + '">' + d.out_tok_k.toLocaleString() + '</td>' +
+      '<td class="num' + valCls(d.out_tok_k,'out_tok_k',colStats) + '">' + d.out_tok_k.toLocaleString() + '</td>' +
       numCell(d.time_h, 'time_h', 2) +
-      '<td class="num' + valCls(d.turns,'turns',fdata) + '">' + d.turns.toLocaleString() + '</td>' +
+      '<td class="num' + valCls(d.turns,'turns',colStats) + '">' + d.turns.toLocaleString() + '</td>' +
     '</tr>';
   }).join('');
 }
