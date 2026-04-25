@@ -266,12 +266,15 @@ def compute_records():
         ws_prec = sub.groupby("workspace")["score_precision"].mean()
         ws_rec = sub.groupby("workspace")["score_recall"].mean()
         ws_res = sub.groupby("workspace")["is_resolved"].mean()
-        ws_cost = sub.groupby("workspace")["m_cost_usd"].sum()
+        # Trial-level totals from agent_stats.summary (matches the dashboard).
+        # Per-milestone sums under-count for trials with ungraded prep /
+        # teardown work, so summary is the truer trial total. Same applies to
+        # cost (m_cost_usd sum was missing setup turns billed against the
+        # trial but outside any graded milestone — codex gpt-5.5 dubbo:
+        # milestone sum $65.70 vs summary $111.96).
         ws_dur = trial_df[trial_df["model"] == model].set_index("workspace")["total_duration_ms"] / 3_600_000
-        # Trial-level total_turns from agent_stats.summary (matches the
-        # dashboard). Per-milestone m_turns sums under-count for trials that
-        # had ungraded prep/teardown, so summary is the truer trial total.
         ws_turns = trial_df[trial_df["model"] == model].set_index("workspace")["total_turns"]
+        ws_cost = trial_df[trial_df["model"] == model].set_index("workspace")["total_cost_usd"]
 
         records.append({
             "agent": agent,
