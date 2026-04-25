@@ -168,6 +168,7 @@ CHART_LABELS = {
 # Default is 'middle right'.
 CHART_TEXT_POS = {
     ("claude-code", "claude-sonnet-4-5-20250929"): "middle left",
+    ("claude-code", "kimi-k2.6"): "middle left",
     ("codex", "gpt-5.2"): "middle left",
     ("codex", "gpt-5.3-codex"): "middle left",
     ("gemini-cli", "gemini-3-flash"): "middle left",
