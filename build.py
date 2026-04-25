@@ -445,7 +445,8 @@ body{background:var(--bg-0);color:var(--text-1);font-family:'Inter',system-ui,-a
  * achieving model's family color (Anthropic orange for Claude wins,
  * Z.ai blue for GLM, OpenAI green for GPT, etc.). */
 .news-banner{display:flex;align-items:center;gap:.6rem;padding:.55rem .9rem;border-radius:8px;border:1px solid color-mix(in srgb, var(--accent, #10A37F) 28%, transparent);background:color-mix(in srgb, var(--accent, #10A37F) 8%, transparent);font-size:.85rem;color:var(--text-2);line-height:1.5}
-.news-stack{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.25rem}
+.news-stack{display:grid;grid-template-columns:1fr 1fr;gap:.4rem .6rem;margin-bottom:1.25rem}
+@media (max-width:720px){.news-stack{grid-template-columns:1fr}}
 .news-tag{flex-shrink:0;padding:.1rem .45rem;border-radius:4px;background:var(--accent, #10A37F);color:var(--tag-text, #fff);font-size:.65rem;font-weight:700;letter-spacing:.04em}
 /* Z.ai banner pulls both its accent AND the contrast-safe tag text
  * from the themed CSS variables defined on :root / [data-theme="light"],
