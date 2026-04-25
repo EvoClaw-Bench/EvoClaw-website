@@ -586,7 +586,7 @@ footer a:hover{color:var(--accent)}
   <div class="news-stack">
     <div class="news-banner" style="--accent:#D97757">
       <span class="news-tag">NEW</span>
-      <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K &amp; 1M context) leads the overall leaderboard at <strong>39.81%</strong>.</span>
+      <span class="news-text"><strong>Claude Opus 4.7</strong> (xhigh, 200K context) leads the overall leaderboard at <strong>39.81%</strong>.</span>
     </div>
     <div class="news-banner" style="--accent:#10A37F">
       <span class="news-tag">NEW</span>
