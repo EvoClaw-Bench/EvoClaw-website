@@ -251,7 +251,10 @@ def compute_records():
         ws_res = sub.groupby("workspace")["is_resolved"].mean()
         ws_cost = sub.groupby("workspace")["m_cost_usd"].sum()
         ws_dur = trial_df[trial_df["model"] == model].set_index("workspace")["total_duration_ms"] / 3_600_000
-        ws_turns = sub.groupby("workspace")["m_turns"].sum()
+        # Trial-level total_turns from agent_stats.summary (matches the
+        # dashboard). Per-milestone m_turns sums under-count for trials that
+        # had ungraded prep/teardown, so summary is the truer trial total.
+        ws_turns = trial_df[trial_df["model"] == model].set_index("workspace")["total_turns"]
 
         records.append({
             "agent": agent,
