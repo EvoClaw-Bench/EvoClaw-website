@@ -536,8 +536,16 @@ function renderChart() {
     'bottom left':   ['right',  'top',    -14, -22],
     'middle center': ['center', 'middle',   0,   0],
   };
+  const officialOnly = document.getElementById('officialToggle').checked;
   const annotations = fdata.map(d => {
-    const pos = d.chart_textpos || 'middle right';
+    let pos = d.chart_textpos || 'middle right';
+    // CC GLM-5 sits below its pill in the full view to dodge the dense
+    // adjacent CC cluster; once OH entries are filtered out the room
+    // re-opens, so push the label back to middle-left where it reads
+    // naturally.
+    if (officialOnly && d.agent === 'claude-code' && d.model === 'glm-5') {
+      pos = 'middle left';
+    }
     const [xanchor, yanchor, xshift, yshift] = POS_MAP[pos] || POS_MAP['middle right'];
     const onFrontier = frontierSet.has(d.agent + '|' + d.model);
     const label = onFrontier
