@@ -905,16 +905,18 @@ function renderChart() {
 
   // Map plotly textposition strings → annotation placement. Each entry
   // gives (xanchor, yanchor, xshift, yshift) so a label clears the pill in
-  // the requested direction. Values are tuned for the pill+icon stack size.
+  // the requested direction. Values are tuned for the pill+icon stack size:
+  // top/bottom shifts need ~32px to clear the pill height; left/right shifts
+  // need ~18px to clear the pill width.
   const POS_MAP = {
     'middle right':  ['left',   'middle',  18,   0],
     'middle left':   ['right',  'middle', -18,   0],
-    'top center':    ['center', 'bottom',   0,  20],
-    'top right':     ['left',   'bottom',  14,  16],
-    'top left':      ['right',  'bottom', -14,  16],
-    'bottom center': ['center', 'top',      0, -20],
-    'bottom right':  ['left',   'top',     14, -16],
-    'bottom left':   ['right',  'top',    -14, -16],
+    'top center':    ['center', 'bottom',   0,  32],
+    'top right':     ['left',   'bottom',  14,  28],
+    'top left':      ['right',  'bottom', -14,  28],
+    'bottom center': ['center', 'top',      0, -32],
+    'bottom right':  ['left',   'top',     14, -28],
+    'bottom left':   ['right',  'top',    -14, -28],
     'middle center': ['center', 'middle',   0,   0],
   };
   const annotations = fdata.map(d => {
