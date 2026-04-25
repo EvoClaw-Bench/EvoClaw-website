@@ -27,10 +27,12 @@ AGENT_MODEL_DISPLAY = {
     ("claude-code", "claude-opus-4-7[1m]"): "CC Opus 4.7 xhigh 1M",
     ("claude-code", "glm-5"): "CC GLM-5",
     ("claude-code", "glm-5.1"): "CC GLM-5.1",
+    ("claude-code", "kimi-k2.6"): "CC Kimi K2.6",
     ("codex", "gpt-5.2-codex"): "Codex GPT-5.2C",
     ("codex", "gpt-5.2"): "Codex GPT-5.2",
     ("codex", "gpt-5.3-codex"): "Codex GPT-5.3C",
     ("codex", "gpt-5.4"): "Codex GPT-5.4",
+    ("codex", "gpt-5.5"): "Codex GPT-5.5",
     ("gemini-cli", "gemini-3-flash"): "Gemini Flash",
     ("gemini-cli", "gemini-3-flash-preview"): "Gemini Flash",
     ("gemini-cli", "gemini-3-pro"): "Gemini Pro",
@@ -41,7 +43,9 @@ AGENT_MODEL_DISPLAY = {
 AGENT_MODEL_ORDER = [
     "CC Sonnet 4.5", "CC Opus 4.5", "CC Sonnet 4.6", "CC Opus 4.6",
     "CC Opus 4.7 xhigh", "CC Opus 4.7 xhigh 1M", "CC GLM-5", "CC GLM-5.1",
+    "CC Kimi K2.6",
     "Codex GPT-5.2C", "Codex GPT-5.2", "Codex GPT-5.3C", "Codex GPT-5.4",
+    "Codex GPT-5.5",
     "Gemini Pro", "Gemini 3.1 Pro", "Gemini Flash",
 ]
 
@@ -74,8 +78,9 @@ AGENT_GROUPS = [
         "claude-sonnet-4-5-20250929", "claude-opus-4-5-20251101",
         "claude-sonnet-4-6", "claude-opus-4-6",
         "claude-opus-4-7", "claude-opus-4-7[1m]", "glm-5", "glm-5.1",
+        "kimi-k2.6",
     ]),
-    ("codex", ["gpt-5.2-codex", "gpt-5.2", "gpt-5.3-codex", "gpt-5.4"]),
+    ("codex", ["gpt-5.2-codex", "gpt-5.2", "gpt-5.3-codex", "gpt-5.4", "gpt-5.5"]),
     ("gemini-cli", ["gemini-3-pro", "gemini-3.1-pro", "gemini-3-flash"]),
 ]
 OPENHANDS_MODELS = [
@@ -97,10 +102,12 @@ MODEL_DISPLAY = {
     "gpt-5.2": "GPT 5.2",
     "gpt-5.3-codex": "GPT 5.3 Codex",
     "gpt-5.4": "GPT 5.4",
+    "gpt-5.5": "GPT 5.5",
     "gemini-3-pro": "Gemini 3 Pro",
     "gemini-3.1-pro": "Gemini 3.1 Pro",
     "gemini-3-flash": "Gemini 3 Flash",
     "kimi-k2.5": "Kimi K2.5",
+    "kimi-k2.6": "Kimi K2.6",
     "minimax-m2.5": "MiniMax M2.5",
 }
 AGENT_DISPLAY = {
@@ -122,10 +129,12 @@ MODEL_ORG = {
     "gpt-5.2": "OpenAI",
     "gpt-5.3-codex": "OpenAI",
     "gpt-5.4": "OpenAI",
+    "gpt-5.5": "OpenAI",
     "gemini-3-pro": "Google",
     "gemini-3.1-pro": "Google",
     "gemini-3-flash": "Google",
     "kimi-k2.5": "Moonshot AI",
+    "kimi-k2.6": "Moonshot AI",
     "minimax-m2.5": "MiniMax",
 }
 
@@ -139,10 +148,12 @@ CHART_LABELS = {
     ("claude-code", "claude-opus-4-7[1m]"): "Claude Opus 4.7 xhigh 1M",
     ("claude-code", "glm-5"): "GLM-5",
     ("claude-code", "glm-5.1"): "GLM-5.1",
+    ("claude-code", "kimi-k2.6"): "Kimi K2.6",
     ("codex", "gpt-5.2-codex"): "GPT-5.2-Codex",
     ("codex", "gpt-5.2"): "GPT-5.2",
     ("codex", "gpt-5.3-codex"): "GPT-5.3-Codex",
     ("codex", "gpt-5.4"): "GPT-5.4",
+    ("codex", "gpt-5.5"): "GPT-5.5",
     ("gemini-cli", "gemini-3-pro"): "Gemini 3 Pro",
     ("gemini-cli", "gemini-3.1-pro"): "Gemini 3.1 Pro",
     ("gemini-cli", "gemini-3-flash"): "Gemini 3 Flash",
@@ -179,10 +190,13 @@ ENTRY_COLORS = {
     # GLM variants — the dot resolver in JS pulls the themed --zai-accent.
     ("claude-code", "glm-5"):   "#4A4D5C",
     ("claude-code", "glm-5.1"): "#4A4D5C",
+    # CC Kimi K2.6 — themed silver via --moonshot-accent (same as OH Kimi).
+    ("claude-code", "kimi-k2.6"): "#5C5F6B",
     ("codex", "gpt-5.2-codex"): "#90C890",
     ("codex", "gpt-5.2"): "#90C890",
     ("codex", "gpt-5.3-codex"): "#90C890",
     ("codex", "gpt-5.4"): "#90C890",
+    ("codex", "gpt-5.5"): "#90C890",
     ("gemini-cli", "gemini-3-pro"): "#7AAED8",
     ("gemini-cli", "gemini-3.1-pro"): "#7AAED8",
     ("gemini-cli", "gemini-3-flash"): "#7AAED8",
