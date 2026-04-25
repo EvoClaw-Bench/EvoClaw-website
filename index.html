@@ -522,20 +522,35 @@ function renderChart() {
     }
   });
 
+  // Map plotly textposition strings → annotation placement. Each entry
+  // gives (xanchor, yanchor, xshift, yshift) so a label clears the pill in
+  // the requested direction. Values are tuned for the pill+icon stack size.
+  const POS_MAP = {
+    'middle right':  ['left',   'middle',  18,   0],
+    'middle left':   ['right',  'middle', -18,   0],
+    'top center':    ['center', 'bottom',   0,  20],
+    'top right':     ['left',   'bottom',  14,  16],
+    'top left':      ['right',  'bottom', -14,  16],
+    'bottom center': ['center', 'top',      0, -20],
+    'bottom right':  ['left',   'top',     14, -16],
+    'bottom left':   ['right',  'top',    -14, -16],
+    'middle center': ['center', 'middle',   0,   0],
+  };
   const annotations = fdata.map(d => {
-    const isLeft = (d.chart_textpos || 'middle right') === 'middle left';
+    const pos = d.chart_textpos || 'middle right';
+    const [xanchor, yanchor, xshift, yshift] = POS_MAP[pos] || POS_MAP['middle right'];
     const onFrontier = frontierSet.has(d.agent + '|' + d.model);
     const label = onFrontier
       ? '<b>' + d.chart_label + '</b><br>(' + d.agent_display + ')'
       : d.chart_label + '<br>(' + d.agent_display + ')';
+    // Align text inside the annotation block: anchor right → right-align, etc.
+    const align = xanchor === 'right' ? 'right' : xanchor === 'center' ? 'center' : 'left';
     return {
       x: d.cost, y: d.score, xref: 'x', yref: 'y',
       text: label,
       showarrow: false,
-      xanchor: isLeft ? 'right' : 'left',
-      yanchor: 'middle',
-      align: isLeft ? 'right' : 'left',
-      xshift: isLeft ? -18 : 18,
+      xanchor, yanchor, align,
+      xshift, yshift,
       font: { size: onFrontier ? 14 : 13, color: onFrontier ? (isLight() ? '#6d28d9' : '#c4b5fd') : tc.text2, family: 'Inter, sans-serif' },
     };
   });
