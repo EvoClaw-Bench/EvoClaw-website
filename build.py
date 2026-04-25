@@ -828,7 +828,7 @@ function renderChart() {
   // org/agent icon images; labelAlpha scales the annotation text colour.
   const TIER = {
     on:   { dotSize: 6, dotOpacity: 1.0,  pillAlphaMult: 1.0, iconOpacity: 1.0,  labelAlpha: 1.0  },
-    near: { dotSize: 5, dotOpacity: 1.0,  pillAlphaMult: 1.0, iconOpacity: 1.0,  labelAlpha: 0.9  },
+    near: { dotSize: 5, dotOpacity: 1.0,  pillAlphaMult: 1.0, iconOpacity: 1.0,  labelAlpha: 1.0  },
     off:  { dotSize: 4, dotOpacity: 0.45, pillAlphaMult: 0.5, iconOpacity: 0.45, labelAlpha: 0.55 },
   };
 
