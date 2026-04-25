@@ -171,10 +171,11 @@ CHART_TEXT_POS = {
     ("claude-code", "kimi-k2.6"): "middle left",
     ("codex", "gpt-5.2"): "middle left",
     ("codex", "gpt-5.3-codex"): "middle left",
+    ("codex", "gpt-5.5"): "middle left",
     ("gemini-cli", "gemini-3-flash"): "middle left",
     ("openhands", "minimax-m2.5"): "middle left",
     ("openhands", "kimi-k2.5"): "middle left",
-    ("openhands", "claude-opus-4-6"): "middle left",
+    ("openhands", "claude-opus-4-6"): "bottom right",
 }
 
 # ── Per-entry colors (brightened for dark bg) ───────────────────────────────
