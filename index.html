@@ -355,17 +355,13 @@ function renderChart() {
       text: pts.map(() => ''),
       customdata: pts.map(p => [
         p.model_display, p.agent_display, p.precision, p.recall,
-        p.resolve, p.out_tok_k, p.time_h, p.turns
+        p.resolve, p.out_tok_k, p.time_h, p.turns,
+        p.agent + '|' + p.model,  // [8] hover-lookup key for annotation boost
       ]),
       mode: 'markers+text',
       type: 'scatter',
       name: org.key,
       marker: { size: 25, color: 'rgba(0,0,0,0)' },
-      // Hover highlight — when plotly_hover sets selectedpoints to a single
-      // index, that one marker grows into a soft purple halo. Other org
-      // points stay invisible (transparent).
-      selected: { marker: { size: 56, color: 'rgba(167,139,250,0.18)' } },
-      unselected: { marker: { color: 'rgba(0,0,0,0)' } },
       textposition: pts.map(p => p.chart_textpos || 'middle right'),
       textfont: { size: 13, color: tc.text2, family: 'Inter, sans-serif' },
       hovertemplate:
@@ -677,23 +673,37 @@ function renderChart() {
   const BASE_XSHIFT = 18;
   let scaling = false;
 
-  // Hover highlight — when the user hovers a data point, mark it as
-  // selected so the org trace's `selected.marker` styling kicks in
-  // (soft purple halo). On unhover, clear the selection so the halo
-  // disappears.
-  let hoverCurve = -1;
+  // Hover highlight — boost the hovered point's label to opaque + bold
+  // so it stands out from off-tier neighbours. Restore on unhover.
+  // Annotations are positional (annotations[i] ↔ fdata[i]); we look up
+  // the index from customdata[8] = "agent|model".
+  const annKeyMap = new Map();
+  fdata.forEach((d, i) => annKeyMap.set(d.agent + '|' + d.model, i));
+  let hoverAnnIdx = -1;
   chartEl.on('plotly_hover', function(ev) {
     if (!ev || !ev.points || !ev.points.length) return;
     const pt = ev.points[0];
-    // Frontier line + centre-dot traces have no customdata — skip them.
     if (!pt.data || !pt.data.customdata) return;
-    hoverCurve = pt.curveNumber;
-    Plotly.restyle(chartEl, { selectedpoints: [[pt.pointIndex]] }, [hoverCurve]);
+    const key = pt.customdata[8];
+    if (!key || !annKeyMap.has(key)) return;
+    hoverAnnIdx = annKeyMap.get(key);
+    const d = fdata[hoverAnnIdx];
+    Plotly.relayout(chartEl, {
+      [`annotations[${hoverAnnIdx}].text`]:
+        '<b>' + d.chart_label + '</b><br>(' + d.agent_display + ')',
+      [`annotations[${hoverAnnIdx}].font.color`]: tc.text,
+      [`annotations[${hoverAnnIdx}].font.size`]: 14,
+    });
   });
   chartEl.on('plotly_unhover', function() {
-    if (hoverCurve < 0) return;
-    Plotly.restyle(chartEl, { selectedpoints: [null] }, [hoverCurve]);
-    hoverCurve = -1;
+    if (hoverAnnIdx < 0) return;
+    const a = annotations[hoverAnnIdx];
+    Plotly.relayout(chartEl, {
+      [`annotations[${hoverAnnIdx}].text`]: a.text,
+      [`annotations[${hoverAnnIdx}].font.color`]: a.font.color,
+      [`annotations[${hoverAnnIdx}].font.size`]: a.font.size,
+    });
+    hoverAnnIdx = -1;
   });
 
   chartEl.on('plotly_relayout', function(ev) {
