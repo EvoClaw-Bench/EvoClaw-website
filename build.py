@@ -169,13 +169,14 @@ CHART_LABELS = {
 CHART_TEXT_POS = {
     ("claude-code", "claude-sonnet-4-5-20250929"): "middle left",
     ("claude-code", "kimi-k2.6"): "middle left",
+    ("claude-code", "glm-5"): "bottom center",
     ("codex", "gpt-5.2"): "middle left",
     ("codex", "gpt-5.3-codex"): "middle left",
     ("codex", "gpt-5.5"): "middle left",
     ("gemini-cli", "gemini-3-flash"): "middle left",
     ("openhands", "minimax-m2.5"): "middle left",
     ("openhands", "kimi-k2.5"): "middle left",
-    ("openhands", "claude-opus-4-6"): "bottom right",
+    ("openhands", "claude-opus-4-6"): "bottom center",
 }
 
 # ── Per-entry colors (brightened for dark bg) ───────────────────────────────
